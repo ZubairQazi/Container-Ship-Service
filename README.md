@@ -1,2 +1,2 @@
 # CS179M
-Senior Design (Artificial Intelligence
+Senior Design (Artificial Intelligence)
