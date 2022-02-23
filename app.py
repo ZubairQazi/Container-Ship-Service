@@ -4,8 +4,8 @@ app = Flask(__name__)
 app.secret_key = "secretStuff" 
 
 @app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+def home():
+    return render_template("home.html")
 
 # Route for handling the login page logic
 @app.route('/login', methods = ['POST', 'GET'])
