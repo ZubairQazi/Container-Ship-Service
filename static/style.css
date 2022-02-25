@@ -7,3 +7,14 @@ body {
 	color: gray
 }
 
+.fcc-btn {
+	background-color: #199319;
+  	color: white;
+  	padding: 15px 25px;
+  	text-decoration: none;
+	border-radius: 5px;
+}
+
+.dash_form {
+	padding: 25px;
+}

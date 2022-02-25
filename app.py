@@ -10,7 +10,7 @@ def home():
 # Route for handling the login page logic
 @app.route('/login', methods = ['POST', 'GET'])
 def login():
-    if(request.method == 'POST'):
+    if request.method == 'POST':
         username = request.form.get('username')
         session['user'] = username
         return redirect('/dashboard')
@@ -18,13 +18,22 @@ def login():
     return render_template("login.html")
 
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods = ['POST', 'GET'])
 def dashboard():
-    if('user' in session):
+    if 'user' in session:
+
         return render_template("dashboard.html", username=session['user'])
 
     return '<h1>You are not logged in.</h1>'
 
+
+@app.route('/transferService')
+def transfer():
+    return render_template('transferService.html')
+
+@app.route('/balanceService')
+def balance():
+    return render_template('balanceService.html')
 
 @app.route('/logout')
 def logout():
