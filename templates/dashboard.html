@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head> 
+		<link rel="stylesheet" href='/static/style.css' />
+		<title>Dashboard</title> 
+	</head>
+	<body>
+		<h1>Welcome to the Dashboard <div class="dash_username">{{username}} </div></h1>
+		<div class="dash_form">
+			<h3>Select a Service</h3>
+			<form method="POST" action="/">
+				<a class="fcc-btn" href="{{ url_for('transfer') }}">Transfer</a>
+				<a class="fcc-btn" href="{{ url_for('balance') }}">Balance</a>
+			</form>
+		</div>
+
+		<div class="dash_form">
+			<h3>Upload Manifest</h3>
+			<form action="/action_page.php">
+  				<input type="file" id="myFile" name="filename">
+  				<input type="submit">
+			</form>
+		</div>
+	</body>
+</html>
