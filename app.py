@@ -1,4 +1,5 @@
 import os
+import utils
 from flask import Flask, abort, render_template, request, redirect, session
 from werkzeug.utils import secure_filename
 
@@ -6,7 +7,6 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 app.secret_key = "secretStuff"
 app.config['UPLOAD_EXTENSIONS'] = ['.txt']
-app.config['UPLOAD_PATH'] = 'uploads' 
 
 @app.route("/")
 def home():
@@ -40,7 +40,9 @@ def upload_file():
           file_ext = os.path.splitext(filename)[1]
           if file_ext not in app.config['UPLOAD_EXTENSIONS']:
               return "Invalid file", 400
-          f.save(os.path.join(app.config['UPLOAD_PATH'],filename))
+          containers = []
+          ship_grid = utils.create_ship_grid()
+          utils.update_ship_grid(f,ship_grid,containers)
       option = request.form['services']
       if option == 'Transfer':
           return render_template('transferService.html')
