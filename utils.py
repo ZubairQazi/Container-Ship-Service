@@ -44,23 +44,22 @@ def update_ship_grid(file, ship_grid, containers):
             ship_grid[x][y] = Slot(None, hasContainer = False, available = True)
         else:
             ship_grid[x][y] = Slot(Container(status, weight), hasContainer = True, available = False)
+            containers.append(loc)
 
-        containers.append(loc)
 
-
-def print_grid(ship_grid, containers):
+def print_grid(ship_grid):
     adj_ship_grid = []
     for row in ship_grid:
         adj_ship_grid.append([1 if slot.hasContainer == True else 0 for slot in row])
     
-    for container in containers:
-        x,y = container[0], container[1]
+    for x, row in enumerate(ship_grid):
+        for y, container in enumerate(row):
 
-        if (ship_grid[x][y].container is not None):
-            adj_ship_grid[x][y] = ship_grid[x][y].container.name[0]
-        else:
-            if (ship_grid[x][y].available == False):
-                adj_ship_grid[x][y] = 'X'
+            if (ship_grid[x][y].container is not None):
+                adj_ship_grid[x][y] = ship_grid[x][y].container.name[0]
+            else:
+                if (ship_grid[x][y].available == False):
+                    adj_ship_grid[x][y] = 'X'
     
     print(np.array(adj_ship_grid[::-1][:]))
 
@@ -121,6 +120,7 @@ def move_to_nearest_available(container_loc, ship_grid):
 
 def close_to_balance(container_loc, left_balance, right_balance):
     # TODO: Implement function
+
     return None
 
 def compute_cost_to_balance(container_loc, ship_grid):
