@@ -16,18 +16,20 @@ class Slot:
         self.available = available
 
 
-def create_ship_grid():
+# Create a ship grid with size
+def create_ship_grid(rows, columns):
     ship_grid = []
 
-    for i in range(8):
+    for i in range(rows):
         container_row = []
-        for i in range(12):
+        for i in range(columns):
             container_row.append(Slot(None, False, False))
         ship_grid.append(container_row)
 
     return ship_grid
 
 
+# Update ship grid with manifest info, update list of containers accordingly
 def update_ship_grid(file, ship_grid, containers):
     for line in file.readlines():
         slot_data = line.split()
@@ -47,6 +49,7 @@ def update_ship_grid(file, ship_grid, containers):
             containers.append(loc)
 
 
+# Given ship grid, outputs matrix representing grid
 def print_grid(ship_grid):
     adj_ship_grid = []
     for row in ship_grid:
@@ -76,6 +79,8 @@ def balance(ship_grid, containers):
 
     iter, max_iter = 0, 100
 
+    halfway_line = len(ship_grid[0]) / 2
+
     # On heavier side, cycle through each container
     while(balanced is False):
 
@@ -87,9 +92,9 @@ def balance(ship_grid, containers):
             return None, False
 
         if left_balance > right_balance:
-            curr_containers = [loc for loc in containers if loc[1] <= 5 and ship_grid[loc[0]][loc[1]].container is not None]  
+            curr_containers = [loc for loc in containers if loc[1] < halfway_line and ship_grid[loc[0]][loc[1]].container is not None]  
         else: 
-            curr_containers = [loc for loc in containers if loc[1] > 5 and ship_grid[loc[0]][loc[1]].container is not None]
+            curr_containers = [loc for loc in containers if loc[1] >= halfway_line and ship_grid[loc[0]][loc[1]].container is not None]
 
         move_cost, balance_update = [], []
         # compute cost for each container to move to other side
@@ -155,7 +160,7 @@ def calculate_balance(ship_grid):
 
 if __name__=="__main__":
 
-    ship_grid = create_ship_grid()
+    ship_grid = create_ship_grid(8, 12)
 
     containers = []
 
@@ -181,7 +186,7 @@ if __name__=="__main__":
     left_balance, right_balance, balanced = calculate_balance(ship_grid)
     total_weight = left_balance + right_balance
     
-    print_grid(ship_grid, containers)
+    print_grid(ship_grid)
 
     print("Total Weight:", total_weight)
     print("Left Balance:", left_balance)
