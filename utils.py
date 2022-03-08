@@ -79,7 +79,7 @@ def balance(ship_grid, containers):
     
     # If balanced return, else continue
     if balanced:
-        return
+        return None, True
 
     steps = []
     iter, max_iter = 0, 100
@@ -150,9 +150,22 @@ def move_to(container_loc, goal_loc, ship_grid):
         for neighbor in valid_moves:
             distances.append((neighbor, manhattan_distance(neighbor, goal_loc)))
         
-        next_move = sorted(distances, key = lambda x: x[1])[0][0]
+        distances = sorted(distances, key = lambda x: x[1])
+        
+        next_move = [-1, -1]
+        for next_loc, distance in distances:
+            if next_loc not in visited:
+                next_move = next_loc
+                break
+
+        visited.append(next_move)
 
         steps.append(str(curr_container_loc) + " to " + str(next_move))
+
+        # No valid moves
+        if next_move == [-1, -1]:
+            print("No valid moves!")
+            break
 
         ship_grid[curr_container_loc[0]][curr_container_loc[1]], ship_grid[next_move[0]][next_move[1]] = \
             ship_grid[next_move[0]][next_move[1]], ship_grid[curr_container_loc[0]][curr_container_loc[1]]
