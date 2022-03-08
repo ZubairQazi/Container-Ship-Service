@@ -5,6 +5,8 @@ import numpy as np
 class Container:
     def __init__(self, name, weight):
         self.name = name
+        self.name_adj = re.findall(r'^.*\d{4}',name)
+        self.name_check = False
         self.weight = weight
 
 
@@ -35,7 +37,6 @@ def update_ship_grid(file, ship_grid, containers):
         loc = [int(val) - 1 for val in re.sub(r"[\[\]]",'',slot_data[0]).split(",")[:2]]
         weight = int(re.sub(r"[\{\}\,]",'',slot_data[1]))
         status = slot_data[2] if len(slot_data) < 3 else " ".join(slot_data[2:])
-        
         x,y = loc
 
         if status == "NAN":
@@ -44,6 +45,8 @@ def update_ship_grid(file, ship_grid, containers):
             ship_grid[x][y] = Slot(None, hasContainer = False, available = True)
         else:
             ship_grid[x][y] = Slot(Container(status, weight), hasContainer = True, available = False)
+            if len(ship_grid[x][y].container.name_adj) > 0:
+                ship_grid[x][y].container.name_check = True 
             containers.append(loc)
 
 
