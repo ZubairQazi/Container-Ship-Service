@@ -7,5 +7,20 @@
 
 	<body>
 		<p>To be completed </p>
+		<div class="gridContainer">
+			{% for row in ship_grid %}
+				<div class="rowContainer">
+				{% for slot in row %}
+					{% if slot.hasContainer == True and slot.available == False %}
+						<div class="containerButton">{{slot.container.name}}</div>
+					{% elif slot.hasContainer == False and slot.available == False %}
+						<div class="unavailableSlot"></div>
+					{% else %}
+						<div class="emptySlot"></div>
+					{% endif %}
+				{% endfor %}
+				</div>
+			{% endfor %}
+		</div>
 	</body>
 </html>
