@@ -18,3 +18,70 @@ body {
 .dash_form {
 	padding: 25px;
 }
+
+.gridContainer {
+	width: 900px;
+	height: 600px;
+	display: flex;
+	flex-direction: column;
+	margin: 50px;
+	gap: 0;
+	border: 5px solid #000000
+}
+
+.rowContainer {
+	height: 75px;
+	display: flex;
+	flex-direction: row;
+	gap: 0;
+	padding: 0px;
+	border: 1px solid #000000
+}
+
+.containerButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	
+	background-color: #2664F5;
+	color: white;
+	border: 1px solid #000000;
+}
+
+.containerButton:hover {
+	background-color: #00008B;
+}
+
+.containerButton:active {
+	background-color: #ff0000;
+}
+
+.unavailableSlot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	
+	background-color: black;
+	border: 1px solid #000000;
+}
+
+.emptySlot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	
+	background-color: white;
+	color: white;
+	border: 1px solid #000000;
+}
+
+.emptySlot:hover {
+	background-color: #055a05;
+}
+
+.emptySlot:active {
+	background-color: #ff0000;
+}
