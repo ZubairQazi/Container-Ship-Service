@@ -38,50 +38,87 @@ body {
 	border: 1px solid #000000
 }
 
-.containerButton {
+.containerButtonWrapper {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 1 1 12.5%;
-	
+	transition-duration: 0.4s;
 	background-color: #2664F5;
 	color: white;
 	border: 1px solid #000000;
+}
+.containerButtonWrapper:hover {
+	background-color: #00008B;
+}
+.containerButton {
+	height: 70px;
+	width: 70px;
+	padding: 0px;
+	display: inline-block;
+	border: none;
+	text-align: center;
+	text-decoration: none;
+	transition-duration: 0.4s;
+	cursor: pointer;
+	background-color: #2664F5;
+	color: white;
 }
 
 .containerButton:hover {
 	background-color: #00008B;
 }
 
-.containerButton:active {
-	background-color: #ff0000;
-}
-
-.unavailableSlot {
+.unavailableSlotWrapper {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 1 1 12.5%;
-	
-	background-color: black;
-	border: 1px solid #000000;
-}
-
-.emptySlot {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex: 1 1 12.5%;
-	
-	background-color: white;
+	background-color: #000000;
 	color: white;
 	border: 1px solid #000000;
 }
 
-.emptySlot:hover {
+.unavailableSlotButton {
+	height: 70px;
+	width: 70px;
+	padding: 0px;
+	display: inline-block;
+	border: none;
+	text-align: center;
+	text-decoration: none;
+	background-color: black;
+}
+
+.emptySlotWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	transition-duration: 0.4s;
+	background-color: white;
+	border: 1px solid #000000;	
+}
+
+.emptySlotWrapper:hover {
 	background-color: #055a05;
 }
 
-.emptySlot:active {
-	background-color: #ff0000;
+.emptySlotButton {
+	height: 70px;
+	width: 70px;
+	padding: 0px;
+	display: inline-block;
+	border: none;
+	vertical-align: top;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	transition-duration: 0.4s;
+	background-color: white;
 }
+/*
+.emptySlotButton:hover {
+	background-color: #055a05;
+}
+*/

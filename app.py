@@ -45,14 +45,14 @@ def upload_file():
           f.save(filePath)
           openFile = open(filePath,'r')
           containers = []
-          ship_grid = utils.create_ship_grid()
+          ship_grid = utils.create_ship_grid(8,12)
           utils.update_ship_grid(openFile,ship_grid,containers)
           ship_grid_flipped = ship_grid[::-1][:]
       option = request.form['services']
       if option == 'Transfer':
-          return render_template('transferService.html',ship_grid=ship_grid_flipped)
+          return render_template('transferService.html',ship_grid=ship_grid_flipped, enumerate=enumerate)
       else:
-          return render_template('balanceService.html',ship_grid=ship_grid_flipped)
+          return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate)
 
 @app.route('/logout')
 def logout():

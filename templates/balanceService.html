@@ -13,18 +13,19 @@
 				{% for slot in row %}
 					{% if slot.hasContainer == True and slot.available == False %}
 						{% if slot.container.name_check == True %}
-							<div class="containerButton">{{slot.container.name_adj[0]}}</div>
+							<div class="containerButtonWrapper" id="{{slot.container.name_adj[0]}}" onclick="TurnRed(this.id)">{{slot.container.name_adj[0]}}</div>
 						{% else %}
-							<div class="containerButton">{{slot.container.name}}</div>
+							<div class="containerButtonWrapper"id="{{slot.container.name}}" onclick="TurnRed(this.id)">{{slot.container.name}}</div>
 						{% endif %}
 					{% elif slot.hasContainer == False and slot.available == False %}
-						<div class="unavailableSlot"></div>
+						<div class="unavailableSlotWrapper"></div>
 					{% else %}
-						<div class="emptySlot"></div>
+						<div class="emptySlotWrapper" id="" onclick="TurnGreen()"></div>
 					{% endif %}
 				{% endfor %}
 				</div>
 			{% endfor %}
 		</div>
 	</body>
+	<script src="{{ url_for('static', filename='grid.js') }}"></script>
 </html>
