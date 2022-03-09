@@ -268,7 +268,7 @@ def move_container_above(container_loc, ship_grid):
 
     if(container_above[0] < len(ship_grid ) - 1):
         if (ship_grid[container_above[0] + 1][container_above[1]].hasContainer):
-            move_container_above(container_above, ship_grid)
+            steps.append(move_container_above(container_above, ship_grid))
 
     nearest_avail = nearest_available(container_above, ship_grid)
 
