@@ -1,11 +1,15 @@
 import copy
+from http.client import SWITCHING_PROTOCOLS
 import re
+from readline import set_completion_display_matches_hook
+from sysconfig import get_config_h_filename
 import numpy as np
 import time
 
 class Container:
     def __init__(self, name, weight):
         self.name = name
+        self.name_adj = re.findall(r'^.*\d{4}', name)
         self.weight = weight
 
 
@@ -119,11 +123,21 @@ def balance(ship_grid, containers):
         # If there has been no update in balance
         if (abs(previous_balance_ratio - balance_ratio) < 0.000001):
             # TODO: Call function to handle this case and then return
+            print("Balancing not possible")
             return
 
         # move container
         goal_loc = list(nearest_available_balance(left_balance, right_balance, ship_grid))
         steps.append(move_to(container_to_move, goal_loc, ship_grid))
+
+        # print_grid(ship_grid)
+
+        # Update containers with new changes
+        containers = []
+        for x, row in enumerate(ship_grid):
+            for y, col in enumerate(row):
+                if ship_grid[x][y].hasContainer is True:
+                    containers.append([x, y])
     
         left_balance, right_balance, balanced = calculate_balance(ship_grid)
         previous_balance_ratio = balance_ratio
@@ -141,10 +155,84 @@ def move_to(container_loc, goal_loc, ship_grid):
     visited = []
 
     while (curr_container_loc != goal_loc):
+
+        # print("cuur-goal:", curr_container_loc, goal_loc)
+
+        curr_container = ship_grid[curr_container_loc[0]][curr_container_loc[1]].container
+
+        # if (curr_container is not None):
+        visited.append((curr_container, curr_container_loc))
+
         # return valid neighbors
         valid_moves = return_valid_moves(curr_container_loc, ship_grid)
 
-        # TODO: If no valid moves, move top container
+        # TODO: If no valid moves because of top container, move top container
+        if not valid_moves:
+            if curr_container_loc[0] < len(ship_grid) - 1:
+                if ship_grid[curr_container_loc[0] + 1][curr_container_loc[1]].hasContainer:
+                    print("No valid moves for current container... Moving container above")
+                    extra_steps = move_container_above(curr_container_loc, ship_grid)
+                    steps.append(extra_steps)
+                    valid_moves = return_valid_moves(curr_container_loc, ship_grid)
+
+        distances = []
+        for neighbor in valid_moves:
+            distances.append((neighbor, manhattan_distance(neighbor, goal_loc)))
+        
+        distances = sorted(distances, key = lambda x: x[1])
+
+        next_move = [-1, -1]
+        # If there are two options of the same distance
+        same_distances = [tup for tup in distances if tup[1] == distances[0][1]]
+        if len(same_distances) > 1:
+            next_move = min([(loc, abs((len(ship_grid[0]) / 2) - loc[1])) for loc, d in same_distances], key = lambda x: x[1])[0]
+        else:
+            for next_loc, distance in distances:
+                if (curr_container, next_loc) not in visited:
+                    next_move = next_loc
+                    break
+        
+        steps.append(str(curr_container_loc) + " to " + str(next_move))
+
+        # No valid moves
+        if next_move == [-1, -1]:
+            return_valid_moves(curr_container_loc, ship_grid)
+            print("No valid moves!")
+            break
+
+        ship_grid[curr_container_loc[0]][curr_container_loc[1]], ship_grid[next_move[0]][next_move[1]] = \
+            ship_grid[next_move[0]][next_move[1]], ship_grid[curr_container_loc[0]][curr_container_loc[1]]
+
+        curr_container_loc = copy.deepcopy(next_move)
+    
+    # print_grid(ship_grid)
+
+    return steps
+
+
+def compute_cost(container_loc, goal_loc, ship_grid):
+    steps = []
+    curr_container_loc = copy.deepcopy(container_loc)
+
+    visited = []
+
+    while (curr_container_loc != goal_loc):
+
+        curr_container = ship_grid[curr_container_loc[0]][curr_container_loc[1]].container
+
+        # if (curr_container is not None):
+        visited.append((curr_container, curr_container_loc))
+
+        # return valid neighbors
+        valid_moves = return_valid_moves(curr_container_loc, ship_grid)
+
+        # TODO: If no valid moves because of top container, move top container
+        if not valid_moves:
+            if curr_container_loc[0] < len(ship_grid) - 1:
+                if ship_grid[curr_container_loc[0] + 1][curr_container_loc[1]].hasContainer:
+                    print("No valid moves for current container... Moving container above")
+                    extra_steps = move_container_above(curr_container_loc, ship_grid)
+                    steps.append(extra_steps)
 
         distances = []
         for neighbor in valid_moves:
@@ -154,30 +242,72 @@ def move_to(container_loc, goal_loc, ship_grid):
         
         next_move = [-1, -1]
         for next_loc, distance in distances:
-            if next_loc not in visited:
+            if (curr_container, next_loc) not in visited:
                 next_move = next_loc
                 break
-
-        visited.append(next_move)
 
         steps.append(str(curr_container_loc) + " to " + str(next_move))
 
         # No valid moves
         if next_move == [-1, -1]:
-            print("No valid moves!")
             break
 
         ship_grid[curr_container_loc[0]][curr_container_loc[1]], ship_grid[next_move[0]][next_move[1]] = \
             ship_grid[next_move[0]][next_move[1]], ship_grid[curr_container_loc[0]][curr_container_loc[1]]
 
         curr_container_loc = copy.deepcopy(next_move)
+    
+    # print_grid(ship_grid)
 
     return steps
+
+# TODO: TEST FUNCTION
+def move_container_above(container_loc, ship_grid):
+    steps = []
+    container_above = [container_loc[0] + 1, container_loc[1]]
+
+    if(container_above[0] < len(ship_grid ) - 1):
+        if (ship_grid[container_above[0] + 1][container_above[1]].hasContainer):
+            move_container_above(container_above, ship_grid)
+
+    nearest_avail = nearest_available(container_above, ship_grid)
+
+    steps.append(move_to(container_above, nearest_avail, ship_grid))
+
+    return steps
+
+# TODO: Test function thoroughly
+# Finds nearest available slot to the side of container_loc column
+def nearest_available(container_loc, ship_grid):
+
+    line_at_container = container_loc[1]
+
+    open_slots = []
+    
+    for r, row in enumerate(ship_grid):
+        for c, slot in enumerate(row):
+            # Check if slot is available and is not hovering in the air
+            if slot.available is True:
+                # If slot is on the ground or If slot is not hovering in the air
+                if (r == 0 or ship_grid[r - 1][c].available is False) and c != line_at_container:
+                    open_slots.append([r, c])
+
+    distances = []
+    for slot in open_slots:
+        distances.append((slot, len(compute_cost(container_loc, slot, copy.deepcopy(ship_grid)))))
+
+    distances = sorted(distances, key = lambda x: x[1])
+
+    return distances[0][0]
 
 
 # returns list of valid moves for container loc
 def return_valid_moves(container_loc, ship_grid):
 
+    if container_loc[0] < len(ship_grid) - 1:
+        if ship_grid[container_loc[0] + 1][container_loc[1]].hasContainer is True:
+            return []
+    
     neighbors = []
     # We only consider four neighbors
     neighbors.append([container_loc[0] - 1, container_loc[1]])
@@ -185,12 +315,15 @@ def return_valid_moves(container_loc, ship_grid):
     neighbors.append([container_loc[0], container_loc[1] - 1])
     neighbors.append([container_loc[0], container_loc[1] + 1])
 
-    # only neighrbors inside the grid, (x, y) >= 0
-    neighbors = [neighbor for neighbor in neighbors if neighbor[0] >= 0 and neighbor[1] >= 0]
+    # only neighbors inside the grid, (x, y) >= 0
+    neighbors = [neighbor for neighbor in neighbors if neighbor[0] >= 0  and neighbor[0] <= 7 and \
+        neighbor[1] >= 0 and neighbor[1] <= 7]
 
     valid_moves = []
+
     for neighbor in neighbors:
-        if ship_grid[neighbor[0]][neighbor[1]].available is True:
+        if ship_grid[neighbor[0]][neighbor[1]].available is True and \
+            ship_grid[neighbor[0]][neighbor[1]]:
             valid_moves.append(neighbor)
 
     return valid_moves
@@ -200,6 +333,7 @@ def manhattan_distance(container_loc, goal_loc):
     return abs(container_loc[0] - goal_loc[0]) + abs(container_loc[1] - goal_loc[1])
 
 
+# TODO: FIX INDEXING, SEE nearest_available(...)
 def nearest_available_balance(left_balance, right_balance, ship_grid):
 
     halfway_line = int(len(ship_grid[0]) / 2)
@@ -300,10 +434,14 @@ if __name__=="__main__":
 
         update_ship_grid(file, ship_grid, containers)
 
+
     left_balance, right_balance, balanced = calculate_balance(ship_grid)
     total_weight = left_balance + right_balance
     
     print_grid(ship_grid)
+
+    #  # TODO: Delete this
+    # print(move_container_above([0,0], ship_grid))
 
     print("Total Weight:", total_weight)
     print("Left Balance:", left_balance)
