@@ -1,8 +1,10 @@
 import copy
+from dis import dis
 from http.client import SWITCHING_PROTOCOLS
 import re
 from readline import set_completion_display_matches_hook
 from sysconfig import get_config_h_filename
+from turtle import pos
 import numpy as np
 import time
 
@@ -168,11 +170,10 @@ def move_to(container_loc, goal_loc, ship_grid):
         # return valid neighbors
         valid_moves = return_valid_moves(curr_container_loc, ship_grid)
 
-        # TODO: If no valid moves because of top container, move top container
         if not valid_moves:
             if curr_container_loc[0] < len(ship_grid) - 1:
                 if ship_grid[curr_container_loc[0] + 1][curr_container_loc[1]].hasContainer:
-                    print("No valid moves for current container... Moving container above")
+                    # print("No valid moves for current container {}... Moving container above".format(str(curr_container_loc)S))
                     extra_steps = move_container_above(curr_container_loc, ship_grid)
                     steps.append(extra_steps)
                     valid_moves = return_valid_moves(curr_container_loc, ship_grid)
@@ -187,8 +188,16 @@ def move_to(container_loc, goal_loc, ship_grid):
         # If there are two options of the same distance
         same_distances = [tup for tup in distances if tup[1] == distances[0][1]]
         if len(same_distances) > 1:
-            next_move = min([(loc, abs((len(ship_grid[0]) / 2) - loc[1])) for loc, d in same_distances], key = lambda x: x[1])[0]
+            possible_move, _, d = min([(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances], key = lambda x: x[1])
+            # cycle through possible moves until a new move is reached
+            while (curr_container, possible_move) in visited:
+                same_distances.remove((possible_move, d))
+                possible_move, _, d = min([(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances], key = lambda x: x[1])
+            # If there is still an available new move
+            if (len(same_distances) > 0):
+                next_move = possible_move
         else:
+            # no equivalent moves, choose best move
             for next_loc, distance in distances:
                 if (curr_container, next_loc) not in visited:
                     next_move = next_loc
