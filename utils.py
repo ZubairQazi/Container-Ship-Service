@@ -69,8 +69,8 @@ def print_grid(ship_grid):
                     adj_ship_grid[x][y] = 'X'
     
     # TODO: Replace original, changed for debugging
-    # print(np.array(adj_ship_grid[::-1][:]))
-    print(np.array(adj_ship_grid))
+    print(np.array(adj_ship_grid[::-1][:]))
+    # print(np.array(adj_ship_grid))
 
 
 # Returns move steps and status code (success or failure)
@@ -100,6 +100,7 @@ def balance(ship_grid, containers):
         if iter >= max_iter:
             print("Balance could not be achieved, beginning SIFT...")
             steps = sift(ship_grid, containers)
+            print_grid(ship_grid)
             return steps, False
         
         if left_balance > right_balance:
@@ -155,16 +156,43 @@ def sift(ship_grid, containers):
     container_weights = sorted([(container, ship_grid[container[0]][container[1]].container) for container in containers], key=lambda container: container[1].weight)
     sorted_container_weights = [tup[0] for tup in container_weights]
 
-    for container in sorted_container_weights:
-        next_move = nearest_available_sift(container, ship_grid)
-        # check if next available is available, else move
+    all_sift_slots = calculate_all_sift_slots(ship_grid)
 
+    for container in sorted_container_weights:
+        next_move = all_sift_slots[0]
+        # while current slot is NaN, cycle through available slots
+        while ship_grid[next_move[0]][next_move[1]].hasContainer is False and \
+                    ship_grid[next_move[0]][next_move[1]].available is False:
+        
+                    del all_sift_slots[0]
+                    # get next available slot
+                    next_move = all_sift_slots[0]
+        # if there is a container, proceed to move it
+        if ship_grid[next_move[0]][next_move[1]].hasContainer is True:
+            nearest_avail = nearest_available(next_move, ship_grid)
+            # move container to nearest available
+            steps.append(move_to(next_move, nearest_avail, ship_grid))
+        # move container to original next move
+        steps.append(move_to(container, next_move, ship_grid))
+            
     return steps
 
 
-# TODO: Implement function
-def nearest_available_sift(container_loc, ship_grid):
-    return None
+def calculate_all_sift_slots(ship_grid):
+    halfway_line = len(ship_grid[0]) / 2
+
+    all_slots = []
+
+    for r in range(len(ship_grid)):
+        p = -1
+        curr_slot = [r, halfway_line - 1]
+        for c in range(len(ship_grid[0])):
+            slot = [r, int((curr_slot[1] + (c * pow(-1, p)))) % 12]
+            p += 1
+            all_slots.append(slot)
+            curr_slot = slot
+
+    return all_slots
 
 
 def move_to(container_loc, goal_loc, ship_grid):
@@ -303,6 +331,7 @@ def move_container_above(container_loc, ship_grid):
 
     return steps
 
+
 # TODO: Test function thoroughly
 # Finds nearest available slot to the side of container_loc column
 def nearest_available(container_loc, ship_grid):
@@ -355,6 +384,7 @@ def return_valid_moves(container_loc, ship_grid):
 
     return valid_moves
 
+
 # returns the manhattan distance heuristic evaluation
 def manhattan_distance(container_loc, goal_loc):
     return abs(container_loc[0] - goal_loc[0]) + abs(container_loc[1] - goal_loc[1])
@@ -392,6 +422,7 @@ def nearest_available_balance(left_balance, right_balance, ship_grid):
 
     return -1, -1
 
+
 # Returns closeness to perfect balance (1.0)
 def close_to_balance(ship_grid, container_loc, left_balance, right_balance):
 
@@ -403,11 +434,6 @@ def close_to_balance(ship_grid, container_loc, left_balance, right_balance):
         closeness = (right_balance - container_weight) / (left_balance + container_weight)
     
     return abs(1.0 - closeness)
-
-
-def compute_cost_to_balance(container_loc, ship_grid):
-    # TODO: Implement cost function
-    return None
 
 
 def calculate_balance(ship_grid):
@@ -461,14 +487,10 @@ if __name__=="__main__":
 
         update_ship_grid(file, ship_grid, containers)
 
-
     left_balance, right_balance, balanced = calculate_balance(ship_grid)
     total_weight = left_balance + right_balance
     
     print_grid(ship_grid)
-
-    #  # TODO: Delete this
-    # print(move_container_above([0,0], ship_grid))
 
     print("Total Weight:", total_weight)
     print("Left Balance:", left_balance)
