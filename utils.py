@@ -73,6 +73,42 @@ def print_grid(ship_grid):
     # print(np.array(adj_ship_grid))
 
 
+# TODO: Implement function
+def load(containers_and_locs, ship_grid):
+
+    steps, unloading_zone = [], [len(ship_grid) - 1, 0]
+
+    for idx, (container, loc) in enumerate(containers_and_locs):
+        ship_grid[unloading_zone[0]][unloading_zone[1]].container = container
+        ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = True
+        ship_grid[unloading_zone[0]][unloading_zone[1]].available = False
+
+        steps.append(move_to(unloading_zone, loc, ship_grid))
+        steps[idx].insert(0, "[8, 0] to [7, 0]")
+
+    return steps
+
+
+# TODO: Test function
+def unload(containers_to_unload, ship_grid):
+
+    # order containers by height, descending
+    containers = sorted(containers_to_unload, key=lambda c: c[1], reverse=True)
+
+    steps, unloading_zone = [], [len(ship_grid) - 1, 0]
+    # move each container to unloading zone
+    for container_loc in containers:
+        steps.append(move_to(container_loc, unloading_zone, ship_grid))
+        steps[-1].append(str(unloading_zone) + " to " + "[8, 0]")
+
+        # Remove container from grid
+        ship_grid[unloading_zone[0]][unloading_zone[1]].container = None
+        ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = False
+        ship_grid[unloading_zone[0]][unloading_zone[1]].available = True
+
+    return steps
+
+
 # Returns move steps and status code (success or failure)
 def balance(ship_grid, containers):
     # TODO: Create counter for max iterations, implenent SIFT case
@@ -487,30 +523,68 @@ if __name__=="__main__":
 
         update_ship_grid(file, ship_grid, containers)
 
-    left_balance, right_balance, balanced = calculate_balance(ship_grid)
-    total_weight = left_balance + right_balance
-    
-    print_grid(ship_grid)
-
-    print("Total Weight:", total_weight)
-    print("Left Balance:", left_balance)
-    print("Right Balance:", right_balance)
-
-    if balanced:
-        print("Balanced!")
-    else:
-        print("Not Balanced!")
-        steps, status = balance(ship_grid, containers)
-
-        if (status is True):
-            print_grid(ship_grid)
-
-            left_balance, right_balance, balanced = calculate_balance(ship_grid)
-            
-            print("Total Weight:", total_weight)
-            print("Left Balance:", left_balance)
-            print("Right Balance:", right_balance)
-            print("Balanced!")
+    if input("Proceed with balancing? (y/n): ") == "y":
+        left_balance, right_balance, balanced = calculate_balance(ship_grid)
+        total_weight = left_balance + right_balance
         
+        print_grid(ship_grid)
+
+        print("Total Weight:", total_weight)
+        print("Left Balance:", left_balance)
+        print("Right Balance:", right_balance)
+
+        if balanced:
+            print("Balanced!")
+        else:
+            print("Not Balanced!")
+            steps, status = balance(ship_grid, containers)
+
+            if (status is True):
+                print_grid(ship_grid)
+
+                left_balance, right_balance, balanced = calculate_balance(ship_grid)
+                
+                print("Total Weight:", total_weight)
+                print("Left Balance:", left_balance)
+                print("Right Balance:", right_balance)
+                print("Balanced!")
+            
+            print(steps)
+    else:
+        # containers = [[6, 4]]
+        # steps = unload(containers, ship_grid)
+
+        case = int(input("Select a load/unload case from 1 - 5: "))
+
+        print_grid(ship_grid)
+        print()
+
+        steps = []
+
+        # Case 1 Unload
+        if case == 1:
+            steps.append(unload([[0, 1]], ship_grid))
+        
+        # Case 2 Load
+        if case == 2:
+            steps.append(load([(Container("Bat", 5432), [0, 4])], ship_grid))
+
+        # Case 3 Load/Unload
+        if case == 3:
+            steps.append(load([(Container("Bat", 5432), [0, 4]), (Container("Rat", 5397), [0, 5])], ship_grid))
+            steps.append(unload([[0, 1]], ship_grid))
+        
+        # Case 4 Load/Unload
+        if case == 4:
+            steps.append(load([(Container("Nat", 6543), [1, 3])], ship_grid))
+            steps.append(unload([[6, 4]], ship_grid))
+        
+        # Case 5 Load/Unload
+        if case == 5:
+            steps.append(load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid))
+            steps.append(unload([[0, 4], [0, 3]], ship_grid))
+
+        print_grid(ship_grid)
+
         print(steps)
 
