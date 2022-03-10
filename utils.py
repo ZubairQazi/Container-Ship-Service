@@ -1,10 +1,5 @@
 import copy
-from dis import dis
-from http.client import SWITCHING_PROTOCOLS
 import re
-from readline import set_completion_display_matches_hook
-from sysconfig import get_config_h_filename
-from turtle import pos
 import numpy as np
 import time
 
