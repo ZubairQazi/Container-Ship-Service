@@ -76,6 +76,8 @@ def print_grid(ship_grid):
 # TODO: Implement function
 def load(containers_and_locs, ship_grid):
 
+    ship_grids = []
+
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
 
     for idx, (container, loc) in enumerate(containers_and_locs):
@@ -86,7 +88,9 @@ def load(containers_and_locs, ship_grid):
         steps.append(move_to(unloading_zone, loc, ship_grid))
         steps[idx].insert(0, "[8, 0] to [7, 0]")
 
-    return steps
+        ship_grids.append(copy.deepcopy(ship_grid))
+
+    return steps, ship_grids
 
 
 # TODO: Test function
@@ -94,6 +98,8 @@ def unload(containers_to_unload, ship_grid):
 
     # order containers by height, descending
     containers = sorted(containers_to_unload, key=lambda c: c[1], reverse=True)
+
+    ship_grids = []
 
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
     # move each container to unloading zone
@@ -106,7 +112,9 @@ def unload(containers_to_unload, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = False
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = True
 
-    return steps
+        ship_grids.append(copy.deepcopy(ship_grid))
+
+    return steps, ship_grids
 
 
 # Returns move steps and status code (success or failure)
@@ -120,7 +128,7 @@ def balance(ship_grid, containers):
     if balanced:
         return None, True
 
-    steps = []
+    steps, ship_grids = [], []
     iter, max_iter = 0, 100
 
     halfway_line = len(ship_grid[0]) / 2
@@ -165,8 +173,10 @@ def balance(ship_grid, containers):
 
         # move container
         goal_loc = list(nearest_available_balance(left_balance, right_balance, ship_grid))
-        steps.append(move_to(container_to_move, goal_loc, ship_grid))
+        new_steps, new_grids = move_to(container_to_move, goal_loc, ship_grid)
+        steps.append(new_steps)
 
+        ship_grids.append(new_grids)
         # print_grid(ship_grid)
 
         # Update containers with new changes
@@ -181,7 +191,7 @@ def balance(ship_grid, containers):
         iter += 1
     
     # return updated ship grid and success
-    return steps, True
+    return steps, ship_grids, True
 
 
 # TODO: Implement sift function
@@ -233,7 +243,7 @@ def calculate_all_sift_slots(ship_grid):
 
 def move_to(container_loc, goal_loc, ship_grid):
     # TODO: Implement function
-    steps = []
+    steps, ship_grids = [], []
     curr_container_loc = copy.deepcopy(container_loc)
 
     visited = []
@@ -254,8 +264,9 @@ def move_to(container_loc, goal_loc, ship_grid):
             if curr_container_loc[0] < len(ship_grid) - 1:
                 if ship_grid[curr_container_loc[0] + 1][curr_container_loc[1]].hasContainer:
                     # print("No valid moves for current container {}... Moving container above".format(str(curr_container_loc)S))
-                    extra_steps = move_container_above(curr_container_loc, ship_grid)
+                    extra_steps, extra_grids = move_container_above(curr_container_loc, ship_grid)
                     steps.append(extra_steps)
+                    ship_grids.append(extra_grids)
                     valid_moves = return_valid_moves(curr_container_loc, ship_grid)
 
         distances = []
@@ -298,7 +309,7 @@ def move_to(container_loc, goal_loc, ship_grid):
     
     # print_grid(ship_grid)
 
-    return steps
+    return steps, ship_grids
 
 
 def compute_cost(container_loc, goal_loc, ship_grid):
@@ -354,7 +365,7 @@ def compute_cost(container_loc, goal_loc, ship_grid):
 
 # TODO: TEST FUNCTION
 def move_container_above(container_loc, ship_grid):
-    steps = []
+    steps, ship_grids = [], []
     container_above = [container_loc[0] + 1, container_loc[1]]
 
     if(container_above[0] < len(ship_grid ) - 1):
@@ -364,8 +375,9 @@ def move_container_above(container_loc, ship_grid):
     nearest_avail = nearest_available(container_above, ship_grid)
 
     steps.append(move_to(container_above, nearest_avail, ship_grid))
+    ship_grids.append(copy.deepcopy(ship_grid))
 
-    return steps
+    return steps, ship_grids
 
 
 # TODO: Test function thoroughly
@@ -537,7 +549,7 @@ if __name__=="__main__":
             print("Balanced!")
         else:
             print("Not Balanced!")
-            steps, status = balance(ship_grid, containers)
+            steps, ship_grids, status = balance(ship_grid, containers)
 
             if (status is True):
                 print_grid(ship_grid)
@@ -567,12 +579,17 @@ if __name__=="__main__":
         
         # Case 2 Load
         if case == 2:
-            steps.append(load([(Container("Bat", 5432), [0, 4])], ship_grid))
+            new_steps, ship_grids = load([(Container("Bat", 5432), [0, 4])], ship_grid)
+            steps.append(new_steps)
 
         # Case 3 Load/Unload
         if case == 3:
-            steps.append(load([(Container("Bat", 5432), [0, 4]), (Container("Rat", 5397), [0, 5])], ship_grid))
-            steps.append(unload([[0, 1]], ship_grid))
+            new_steps, ship_grids = load([(Container("Bat", 5432), [0, 4]), (Container("Rat", 5397), [0, 5])], ship_grid)
+            steps.append(new_steps)
+            
+            new_steps, ship_grids = unload([[0, 1]], ship_grid)
+            steps.append(new_steps)
+            
         
         # Case 4 Load/Unload
         if case == 4:
@@ -587,4 +604,3 @@ if __name__=="__main__":
         print_grid(ship_grid)
 
         print(steps)
-
