@@ -68,12 +68,9 @@ def print_grid(ship_grid):
                 if (ship_grid[x][y].available == False):
                     adj_ship_grid[x][y] = 'X'
     
-    # TODO: Replace original, changed for debugging
     print(np.array(adj_ship_grid[::-1][:]))
-    # print(np.array(adj_ship_grid))
 
 
-# TODO: Implement function
 def load(containers_and_locs, ship_grid):
 
     ship_grids = []
@@ -85,15 +82,16 @@ def load(containers_and_locs, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = True
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = False
 
-        steps.append(move_to(unloading_zone, loc, ship_grid))
+        extra_steps, extra_grids = move_to(unloading_zone, loc, ship_grid)
+
+        steps.append(extra_steps)
         steps[idx].insert(0, "[8, 0] to [7, 0]")
 
-        ship_grids.append(copy.deepcopy(ship_grid))
+        ship_grids.append(extra_grids)
 
     return steps, ship_grids
 
 
-# TODO: Test function
 def unload(containers_to_unload, ship_grid):
 
     # order containers by height, descending
@@ -104,7 +102,10 @@ def unload(containers_to_unload, ship_grid):
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
     # move each container to unloading zone
     for container_loc in containers:
-        steps.append(move_to(container_loc, unloading_zone, ship_grid))
+        extra_steps, extra_grids = move_to(container_loc, unloading_zone, ship_grid)
+        steps.append(extra_steps)
+        ship_grids.append(extra_grids)
+
         steps[-1].append(str(unloading_zone) + " to " + "[8, 0]")
 
         # Remove container from grid
@@ -112,14 +113,15 @@ def unload(containers_to_unload, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = False
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = True
 
-        ship_grids.append(copy.deepcopy(ship_grid))
 
     return steps, ship_grids
 
 
 # Returns move steps and status code (success or failure)
 def balance(ship_grid, containers):
-    # TODO: Create counter for max iterations, implenent SIFT case
+
+    if len(containers) == 0:
+        return [], [], True
 
     # Calculate current ship balance on each side
     left_balance, right_balance, balanced = calculate_balance(ship_grid)
@@ -145,7 +147,7 @@ def balance(ship_grid, containers):
             print("Balance could not be achieved, beginning SIFT...")
             steps = sift(ship_grid, containers)
             print_grid(ship_grid)
-            return steps, False
+            return steps, ship_grids, False
         
         if left_balance > right_balance:
             curr_containers = [loc for loc in containers if loc[1] < halfway_line and ship_grid[loc[0]][loc[1]].container is not None]  
@@ -167,15 +169,15 @@ def balance(ship_grid, containers):
 
         # If there has been no update in balance
         if (abs(previous_balance_ratio - balance_ratio) < 0.000001):
-            # TODO: Call function to handle this case and then return
-            print("Balancing not possible")
-            return
+            print("Balance could not be achieved, beginning SIFT...")
+            steps = sift(ship_grid, containers)
+            print_grid(ship_grid)
+            return steps, ship_grids, False
 
         # move container
         goal_loc = list(nearest_available_balance(left_balance, right_balance, ship_grid))
         new_steps, new_grids = move_to(container_to_move, goal_loc, ship_grid)
         steps.append(new_steps)
-
         ship_grids.append(new_grids)
         # print_grid(ship_grid)
 
@@ -194,9 +196,8 @@ def balance(ship_grid, containers):
     return steps, ship_grids, True
 
 
-# TODO: Implement sift function
 def sift(ship_grid, containers):
-    steps = []
+    steps, ship_grids = [], []
 
     # containers sorted by weights
     container_weights = sorted([(container, ship_grid[container[0]][container[1]].container) for container in containers], key=lambda container: container[1].weight)
@@ -217,9 +218,13 @@ def sift(ship_grid, containers):
         if ship_grid[next_move[0]][next_move[1]].hasContainer is True:
             nearest_avail = nearest_available(next_move, ship_grid)
             # move container to nearest available
-            steps.append(move_to(next_move, nearest_avail, ship_grid))
+            extra_steps, extra_grids = move_to(next_move, nearest_avail, ship_grid)
+            steps.append(extra_steps)
+            ship_grids.append(extra_grids)
         # move container to original next move
-        steps.append(move_to(container, next_move, ship_grid))
+        extra_steps, extra_grids = move_to(container, next_move, ship_grid)
+        steps.append(extra_steps)
+        ship_grids.append(extra_grids)
             
     return steps
 
@@ -242,7 +247,6 @@ def calculate_all_sift_slots(ship_grid):
 
 
 def move_to(container_loc, goal_loc, ship_grid):
-    # TODO: Implement function
     steps, ship_grids = [], []
     curr_container_loc = copy.deepcopy(container_loc)
 
@@ -308,6 +312,7 @@ def move_to(container_loc, goal_loc, ship_grid):
         curr_container_loc = copy.deepcopy(next_move)
     
     # print_grid(ship_grid)
+    ship_grids.append(copy.deepcopy(ship_grid))
 
     return steps, ship_grids
 
@@ -328,12 +333,11 @@ def compute_cost(container_loc, goal_loc, ship_grid):
         # return valid neighbors
         valid_moves = return_valid_moves(curr_container_loc, ship_grid)
 
-        # TODO: If no valid moves because of top container, move top container
         if not valid_moves:
             if curr_container_loc[0] < len(ship_grid) - 1:
                 if ship_grid[curr_container_loc[0] + 1][curr_container_loc[1]].hasContainer:
                     print("No valid moves for current container... Moving container above")
-                    extra_steps = move_container_above(curr_container_loc, ship_grid)
+                    extra_steps,  _ = move_container_above(curr_container_loc, ship_grid)
                     steps.append(extra_steps)
 
         distances = []
@@ -363,24 +367,25 @@ def compute_cost(container_loc, goal_loc, ship_grid):
 
     return steps
 
-# TODO: TEST FUNCTION
 def move_container_above(container_loc, ship_grid):
     steps, ship_grids = [], []
     container_above = [container_loc[0] + 1, container_loc[1]]
 
     if(container_above[0] < len(ship_grid ) - 1):
         if (ship_grid[container_above[0] + 1][container_above[1]].hasContainer):
-            steps.append(move_container_above(container_above, ship_grid))
+            extra_steps, extra_grids = move_container_above(container_above, ship_grid)
+            steps.append(extra_steps)
+            ship_grids.append(extra_grids)
 
     nearest_avail = nearest_available(container_above, ship_grid)
 
-    steps.append(move_to(container_above, nearest_avail, ship_grid))
-    ship_grids.append(copy.deepcopy(ship_grid))
+    extra_steps, extra_grids = move_to(container_above, nearest_avail, ship_grid)
+    steps.append(extra_steps)
+    ship_grids.append(extra_grids)
 
     return steps, ship_grids
 
 
-# TODO: Test function thoroughly
 # Finds nearest available slot to the side of container_loc column
 def nearest_available(container_loc, ship_grid):
 
@@ -438,7 +443,6 @@ def manhattan_distance(container_loc, goal_loc):
     return abs(container_loc[0] - goal_loc[0]) + abs(container_loc[1] - goal_loc[1])
 
 
-# TODO: FIX INDEXING, SEE nearest_available(...)
 def nearest_available_balance(left_balance, right_balance, ship_grid):
 
     halfway_line = int(len(ship_grid[0]) / 2)
