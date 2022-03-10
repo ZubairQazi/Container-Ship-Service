@@ -80,7 +80,7 @@ def print_grid(ship_grid):
 
 # Returns move steps and status code (success or failure)
 def balance(ship_grid, containers):
-    # TODO: Create counter for max iterations, implenent according case
+    # TODO: Create counter for max iterations, implenent SIFT case
 
     # Calculate current ship balance on each side
     left_balance, right_balance, balanced = calculate_balance(ship_grid)
@@ -103,8 +103,9 @@ def balance(ship_grid, containers):
 
         # Run until max iterations reached, then return failure
         if iter >= max_iter:
-            print("Balance could not be achieved!")
-            return None, False
+            print("Balance could not be achieved, beginning SIFT...")
+            steps = sift(ship_grid, containers)
+            return steps, False
         
         if left_balance > right_balance:
             curr_containers = [loc for loc in containers if loc[1] < halfway_line and ship_grid[loc[0]][loc[1]].container is not None]  
@@ -149,7 +150,27 @@ def balance(ship_grid, containers):
     
     # return updated ship grid and success
     return steps, True
-    
+
+
+# TODO: Implement sift function
+def sift(ship_grid, containers):
+    steps = []
+
+    # containers sorted by weights
+    container_weights = sorted([(container, ship_grid[container[0]][container[1]].container) for container in containers], key=lambda container: container[1].weight)
+    sorted_container_weights = [tup[0] for tup in container_weights]
+
+    for container in sorted_container_weights:
+        next_move = nearest_available_sift(container, ship_grid)
+        # check if next available is available, else move
+
+    return steps
+
+
+# TODO: Implement function
+def nearest_available_sift(container_loc, ship_grid):
+    return None
+
 
 def move_to(container_loc, goal_loc, ship_grid):
     # TODO: Implement function
