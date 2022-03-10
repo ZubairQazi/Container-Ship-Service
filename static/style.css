@@ -3,6 +3,10 @@ body {
 	text-align: center 
 }
 
+li {
+	margin: 10px 0;
+}
+
 .dash_username {
 	color: gray
 }
@@ -19,13 +23,30 @@ body {
 	padding: 25px;
 }
 
+.containers{
+	display: flex;
+	justify-content: space-between;
+}
+
 .gridContainer {
 	width: 900px;
 	height: 600px;
 	display: flex;
 	flex-direction: column;
-	margin: 50px;
+	margin-top: 25px;
+	margin-left: 50px;
+	margin-bottom: 25px;
 	gap: 0;
+	border: 5px solid #000000
+}
+
+.moveListContainer {
+	width: 400px;
+	height: 600px;
+	display: flex;
+	flex-direction: column;
+	margin-top: 25px;
+	margin-bottom: 25px;
 	border: 5px solid #000000
 }
 
@@ -38,50 +59,138 @@ body {
 	border: 1px solid #000000
 }
 
-.containerButton {
+/* Transfer Wrappers */
+.containerButtonWrapper {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 1 1 12.5%;
-	
+	transition-duration: 0.4s;
+	background-color: #2664F5;
+	color: white;
+	border: 1px solid #000000;
+}
+.containerButtonWrapper:hover {
+	background-color: #00008B;
+}
+
+.unavailableSlotWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	background-color: #000000;
+	color: white;
+	border: 1px solid #000000;
+}
+
+.emptySlotWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	transition-duration: 0.4s;
+	background-color: white;
+	border: 1px solid #000000;	
+}
+
+.emptySlotWrapper:hover {
+	background-color: #055a05;
+}
+
+/* Balance Wrappers*/
+
+.nonClickContainerWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	transition-duration: 0.4s;
 	background-color: #2664F5;
 	color: white;
 	border: 1px solid #000000;
 }
 
-.containerButton:hover {
-	background-color: #00008B;
-}
-
-.containerButton:active {
-	background-color: #ff0000;
-}
-
-.unavailableSlot {
+.nonClickUnavailableSlotWrapper {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex: 1 1 12.5%;
-	
-	background-color: black;
-	border: 1px solid #000000;
-}
-
-.emptySlot {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex: 1 1 12.5%;
-	
-	background-color: white;
+	background-color: #000000;
 	color: white;
 	border: 1px solid #000000;
 }
 
-.emptySlot:hover {
-	background-color: #055a05;
+.nonClickemptySlotWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 12.5%;
+	transition-duration: 0.4s;
+	background-color: white;
+	border: 1px solid #000000;		
 }
 
-.emptySlot:active {
-	background-color: #ff0000;
+/* Form container */
+.formContainer{
+	width: 1424px;
+	height: 100px;
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+}
+
+/* Comment Box Class and Wrapper */
+.boxTitle {
+	display: flex;
+	color: black;
+	height: 50px;
+	width: 900px;
+	justify-content: center;
+	align-items: center;
+	margin-left: 50px;
+}
+
+h2 {
+	font-size: 30px;
+	font-weight: normal;
+	text-transform: uppercase;
+}
+
+.commentBoxWrapper {
+	margin-left: 50px;
+	display: flex;
+	width: 900px;
+	height: 48px;
+}
+
+.commentBoxWrapper input[type="text"] {
+	background-color: #608ba8;
+	flex: 1 1 auto;
+	vertical-align: text-top;
+}
+
+/* Submit button wrapper */
+
+.submitWrapper {
+	width: 100px;
+	height: 50px;
+	padding-right: 150px;
+	padding-bottom: 50px;
+}
+.submitWrapper input[type="submit"] {
+	width: 100px;
+	height: 50px;
+	border: none;
+	cursor: pointer;
+	text-transform: uppercase;
+	border-radius: 4px;
+	background-color: #1DA1F2;
+	color: white;
+	cursor: pointer;
+	justify-content: center;
+}
+
+.formClass{
+	font: 1.2em Helvetica, Arial, sans-serif;
 }

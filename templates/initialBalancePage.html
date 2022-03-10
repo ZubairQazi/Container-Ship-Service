@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href='/static/style.css' />
+		<title>Balancing Service</title>
+	</head>
+
+	<body>
+		<h1> Balancing Service </h1>
+		<div class="containers">
+			<div class="gridContainer">
+				{% for i,row in enumerate(ship_grid) %}
+					<div class="rowContainer">
+					{% for j,slot in enumerate(row) %}
+						{% if slot.hasContainer == True and slot.available == False %}
+							{% if slot.container.name_check == True %}
+								<div class="nonClickContainerWrapper" id="{{slot.container.name_adj[0]}}">{{slot.container.name_adj[0]}}</div>
+							{% else %}
+								<div class="nonClickContainerWrapper"id="{{slot.container.name}}">{{slot.container.name}}</div>
+							{% endif %}
+						{% elif slot.hasContainer == False and slot.available == False %}
+							<div class="nonClickUnavailableSlotWrapper"></div>
+						{% else %}
+							<div class="nonClickemptySlotWrapper" id="[{{i}}, {{j}}]"></div>
+						{% endif %}
+					{% endfor %}
+					</div>
+				{% endfor %}
+			</div>
+			<div class="moveListContainer"></div>
+		</div>
+		<div class="boxTitle"> <h2>Comment Box</h2> </div>
+			<form class="formClass" action="http://localhost:5000/startbalance" method="POST" enctype="multipart/form-data">
+				<div class="formContainer">
+					<div class="commentBoxWrapper">
+						<input type="text" id="commentBoxId">
+					</div>
+					<div class="submitWrapper">
+						<input type="submit" value="Next">
+					</div>
+				</div>
+			</form>
+	</body>
+	<script src="{{ url_for('static', filename='grid.js') }}"></script>
+</html>

@@ -6,6 +6,66 @@
 	</head>
 
 	<body>
-		<h2> Select type of transfer...</h2>
+		<h1> Balancing Service </h1>
+		<div class="containers">
+			<div class="gridContainer">
+				{% for i,row in enumerate(ship_grid) %}
+					<div class="rowContainer">
+					{% for j,slot in enumerate(row) %}
+						{% if slot.hasContainer == True and slot.available == False %}
+							{% if slot.container.name_check == True %}
+								<div class="nonClickContainerWrapper" id="{{slot.container.name_adj[0]}}">{{slot.container.name_adj[0]}}</div>
+							{% else %}
+								<div class="nonClickContainerWrapper"id="{{slot.container.name}}">{{slot.container.name}}</div>
+							{% endif %}
+						{% elif slot.hasContainer == False and slot.available == False %}
+							<div class="nonClickUnavailableSlotWrapper"></div>
+						{% else %}
+							<div class="nonClickemptySlotWrapper" id="[{{i}}, {{j}}]"></div>
+						{% endif %}
+					{% endfor %}
+					</div>
+				{% endfor %}
+			</div>
+			<div class="moveListContainer">
+				<strong>This is the move list for the currently highlighted container.</strong>
+				<strong>Follow the highlighted path to reach the desired location.</strong>
+				<ol>
+					{% for step in display_list %}
+						<li><strong>{{step}}</strong></li>
+					{% endfor %}
+					{% for step in path_list %}
+					<script>
+						window.addEventListener('load', event => {TurnPink("{{step[0:6]}}");});	
+					</script>
+					{% endfor %}
+				</ol>
+			</div>
+		</div>
+		<div class="boxTitle"> <h2>Comment Box</h2> </div>
+			{% if len(next_move_list) == 0 %}
+				<form class="formClass" action="http://localhost:5000/transfercomplete" method="POST" enctype="multipart/form-data">
+					<div class="formContainer">
+						<div class="commentBoxWrapper">
+							<input type="text" id="commentBoxId">
+						</div>
+						<div class="submitWrapper">
+							<input type="submit" value="Next">
+						</div>
+					</div>
+				</form>
+			{% else %}
+				<form class="formClass" action="http://localhost:5000/transfersteps" method="POST" enctype="multipart/form-data">
+					<div class="formContainer">
+						<div class="commentBoxWrapper">
+							<input type="text" id="commentBoxId">
+						</div>
+						<div class="submitWrapper">
+							<input type="submit" value="Next">
+						</div>
+					</div>
+				</form>
+			{% endif %}
 	</body>
+	<script src="{{ url_for('static', filename='grid.js') }}"></script>
 </html>
