@@ -263,20 +263,14 @@ def sift(ship_grid, containers, store_goals):
             steps.append(extra_steps)
             ship_grids.append(extra_grids)
 
-            # TODO: Replace position of next_move container with nearest avail
-            # sorted_container_weights = [nearest_avail if item == next_move else item for item in sorted_container_weights]
             sorted_container_weights[sorted_container_weights.index(next_move)] = nearest_avail
         # move container to original next move
         extra_steps, extra_grids = move_to(container, next_move, ship_grid, store_goals)
         steps.append(extra_steps)
         ship_grids.append(extra_grids)
 
-        # sorted_container_weights = [next_move if item == container else item for item in sorted_container_weights]
         sorted_container_weights[idx] = next_move
-        # print(container, next_move)
-        # print_grid(ship_grid)
-        # print()
-            
+      
     return steps, ship_grids
 
 
