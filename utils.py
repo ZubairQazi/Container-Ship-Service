@@ -1,4 +1,5 @@
 import copy
+from multiprocessing.sharedctypes import Value
 import re
 from shutil import move
 import numpy as np
@@ -77,7 +78,7 @@ def print_grid(ship_grid):
 
 def load(containers_and_locs, ship_grid):
 
-    ship_grids = []
+    ship_grids, store_goals  = [], []
 
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
 
@@ -86,7 +87,7 @@ def load(containers_and_locs, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = True
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = False
 
-        extra_steps, extra_grids = move_to(unloading_zone, loc, ship_grid)
+        extra_steps, extra_grids = move_to(unloading_zone, loc, ship_grid, store_goals)
 
         steps.append(extra_steps)
         # steps[idx].insert(0, "[8, 0] to [7, 0]")
@@ -106,12 +107,12 @@ def unload(containers_to_unload, ship_grid):
     # order containers by height, descending
     containers = sorted(containers_to_unload, key=lambda c: c[1], reverse=True)
 
-    ship_grids = []
+    ship_grids, store_goals  = [], []
 
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
     # move each container to unloading zone
     for container_loc in containers:
-        extra_steps, extra_grids = move_to(container_loc, unloading_zone, ship_grid)
+        extra_steps, extra_grids = move_to(container_loc, unloading_zone, ship_grid, store_goals)
         steps.append(extra_steps)
         ship_grids.append(extra_grids)
 
@@ -162,8 +163,6 @@ def balance(ship_grid, containers):
             print("Balance could not be achieved, beginning SIFT...")
             steps, ship_grids, store_goals = [], [], []
             steps, ship_grids = sift(ship_grid, containers, store_goals)
-            print_grid(ship_grid)
-            print(steps)
             r, c = np.array(ship_grid).shape
             ship_grids = reformat_grid_list(ship_grids, r, c)
             steps = reformat_step_list(steps, store_goals)
@@ -229,8 +228,24 @@ def sift(ship_grid, containers, store_goals):
     sorted_container_weights = [tup[0] for tup in container_weights]
 
     all_sift_slots = calculate_all_sift_slots(ship_grid)
+    new_loc = None
 
-    for container in sorted_container_weights:
+    for idx, container in enumerate(sorted_container_weights):
+        
+        # check if container was moved already without updating
+        if ship_grid[container[0]][container[1]].hasContainer is False:
+            # find container
+            for moves in store_goals:
+                try:
+                    if list(moves).index(str(container)) == 0:
+                        # update container location
+                        new_loc = moves[1]
+                        sorted_container_weights[idx] = [int(l) for l in new_loc.strip('][').split(', ')]
+                        container = sorted_container_weights[idx]
+                        break
+                except ValueError:
+                    pass
+
         next_move = all_sift_slots[0]
         del all_sift_slots[0]
         # while current slot is NaN, cycle through available slots
@@ -248,17 +263,14 @@ def sift(ship_grid, containers, store_goals):
             steps.append(extra_steps)
             ship_grids.append(extra_grids)
 
-            # TODO: Replace position of next_move container with nearest avail
-            sorted_container_weights = [nearest_avail if item == next_move else item for item in sorted_container_weights]
+            sorted_container_weights[sorted_container_weights.index(next_move)] = nearest_avail
         # move container to original next move
         extra_steps, extra_grids = move_to(container, next_move, ship_grid, store_goals)
         steps.append(extra_steps)
         ship_grids.append(extra_grids)
 
-        # print(next_move)
-        # print_grid(ship_grid)
-        # print()
-            
+        sorted_container_weights[idx] = next_move
+      
     return steps, ship_grids
 
 
@@ -597,6 +609,11 @@ def reformat_step_list(steps, store_goals):
 
     for move_list in step_list:
         move_list[-1] = move_list[-1][:len(move_list[-1])-1]
+
+    # remove empty move_lists:
+    for idx, move_list in enumerate(step_list):
+        if len(move_list) == 1 and len(move_list[0]) <= 1:
+            step_list.remove(move_list)
     
     return step_list
 
@@ -651,11 +668,10 @@ if __name__=="__main__":
                 print("Right Balance:", right_balance)
                 print("Balanced!")
             
-            print("Steps")
-            for grid in ship_grids:
-                print_grid(grid)
-                print()
-
+            print("Final Grid")
+            print_grid(ship_grid)
+            print()
+            print("Steps:")
             print(steps)
     else:
         # containers = [[6, 4]]
@@ -670,38 +686,36 @@ if __name__=="__main__":
 
         # Case 1 Unload
         if case == 1:
-            new_steps, ship_grids = unload([[0, 1]], ship_grid)
-            steps.append(new_steps)
+            steps, ship_grids = unload([[0, 1]], ship_grid)
         
         # Case 2 Load
         if case == 2:
-            new_steps, ship_grids = load([(Container("Bat", 5432), [0, 4])], ship_grid)
-            steps.append(new_steps)
+            steps, ship_grids = load([(Container("Bat", 5432), [0, 4])], ship_grid)
 
         # Case 3 Load/Unload
         if case == 3:
-            new_steps, ship_grids = load([(Container("Bat", 5432), [0, 4]), (Container("Rat", 5397), [0, 5])], ship_grid)
-            steps.append(new_steps)
+            steps, ship_grids = load([(Container("Bat", 5432), [0, 4]), (Container("Rat", 5397), [0, 5])], ship_grid)
             
-            new_steps, ship_grids = unload([[0, 1]], ship_grid)
+            new_steps, new_ship_grids = unload([[0, 1]], ship_grid)
             steps.append(new_steps)
+            ship_grids.append(new_ship_grids)
             
         
         # Case 4 Load/Unload
         if case == 4:
-            new_steps, ship_grids = load([(Container("Nat", 6543), [1, 3])], ship_grid)
-            steps.append(new_steps)
+            steps, ship_grids = load([(Container("Nat", 6543), [1, 3])], ship_grid)
 
-            new_steps, ship_grids = unload([[6, 4]], ship_grid)
+            new_steps, new_ship_grids = unload([[6, 4]], ship_grid)
             steps.append(new_steps)
+            ship_grids.append(new_ship_grids)
         
         # Case 5 Load/Unload
         if case == 5:
-            new_steps, ship_grids = load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid)
-            steps.append(new_steps)
+            steps, ship_grids = load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid)
 
-            new_steps, ship_grids = unload([[0, 4], [0, 3]], ship_grid)
+            new_steps, new_ship_grids = unload([[0, 4], [0, 3]], ship_grid)
             steps.append(new_steps)
+            ship_grids.append(new_ship_grids)
 
         print_grid(ship_grid)
 
