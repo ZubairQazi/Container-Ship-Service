@@ -15,6 +15,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 app.secret_key = "secretStuff"
 app.config['UPLOAD_EXTENSIONS'] = ['.txt']
 app.config['UPLOAD_PATH'] = 'uploads' 
+global_ship_grids = []
+
 
 @app.route("/")
 def home():
@@ -87,6 +89,7 @@ def transfered():
 
 @app.route('/startbalance', methods = ['GET','POST'])
 def start_balance():
+    global global_ship_grids
     if request.method == 'POST':
         filePath = session.get('filePath', None)
         openFile = open(filePath,'r')
@@ -95,11 +98,14 @@ def start_balance():
         openFile = open(filePath,'r')
         utils.update_ship_grid(openFile,ship_grid,containers)
         ship_grid_flipped = ship_grid[::-1][:]
-        move_list,success = utils.balance(ship_grid,containers)
-        if move_list is not  None:
+        move_list,ship_grids,success = utils.balance(ship_grid,containers)
+        global_ship_grids = ship_grids[1:]
+        if move_list is not None:
             display_list = []
             path_list = []
             for step in move_list[0]:
+                if not step:
+                    continue
                 numbers = re.findall(r"[^\[\],\sa-z]",step)
                 path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
                 adjusted_numbers = [chr(ord(num)+1) for num in numbers]
@@ -107,20 +113,41 @@ def start_balance():
                 display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
                 display_list.append(display_step)
                 path_list.append(path_step)
-            print(path_list)
             next_move_list = move_list[1:]
             session['next_move_list'] = next_move_list
-            if next_move_list is not None:
-                return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list)
-            else:
-                return render_template('balanced.html')
+            #if next_move_list is not None:
+            return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list)
+            #else:
+        else:
+            return render_template('balanced.html')
 
 @app.route('/balancesteps', methods = ['GET' , 'POST'])
 def next_step_balance():
+    global global_ship_grids
     if request.method == 'POST':
         move_list = session.get('next_move_list',None)
-        print("After",move_list)
-    return render_template('balanced.html')
+        ship_grid = global_ship_grids[0]
+        global_ship_grids = global_ship_grids[1:]
+        ship_grid_flipped = ship_grid[::-1][:]
+        if move_list is not None:
+            display_list = []
+            path_list = []
+            for step in move_list[0]:
+                if not step:
+                    continue
+                numbers = re.findall(r"[^\[\],\sa-z]",step)
+                path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
+                adjusted_numbers = [chr(ord(num)+1) for num in numbers]
+                path_step = "["+path_numbers[0]+", "+path_numbers[1]+"] to ["+path_numbers[2]+", "+path_numbers[3]+"]"
+                display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
+                display_list.append(display_step)
+                path_list.append(path_step)
+            next_move_list = move_list[1:]
+            session['next_move_list'] = next_move_list
+        if move_list is not None:
+            return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list)
+        else:
+            return render_template('balanced.html')
 
 @app.route('/balanced', methods = ['GET','POST'])
 def balanced():
