@@ -3,6 +3,9 @@ import re
 import numpy as np
 import time
 
+from collections.abc import Iterable
+
+
 class Container:
     def __init__(self, name, weight):
         self.name = name
@@ -85,9 +88,12 @@ def load(containers_and_locs, ship_grid):
         extra_steps, extra_grids = move_to(unloading_zone, loc, ship_grid)
 
         steps.append(extra_steps)
-        steps[idx].insert(0, "[8, 0] to [7, 0]")
+        # steps[idx].insert(0, "[8, 0] to [7, 0]")
 
         ship_grids.append(extra_grids)
+    
+    r, c = np.array(ship_grid).shape
+    ship_grids = reformat_grid_list(ship_grids, r, c)
 
     return steps, ship_grids
 
@@ -106,13 +112,15 @@ def unload(containers_to_unload, ship_grid):
         steps.append(extra_steps)
         ship_grids.append(extra_grids)
 
-        steps[-1].append(str(unloading_zone) + " to " + "[8, 0]")
+        # steps[-1].append(str(unloading_zone) + " to " + "[8, 0]")
 
         # Remove container from grid
         ship_grid[unloading_zone[0]][unloading_zone[1]].container = None
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = False
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = True
 
+    r, c = np.array(ship_grid).shape
+    ship_grids = reformat_grid_list(ship_grids, r, c)
 
     return steps, ship_grids
 
@@ -145,8 +153,12 @@ def balance(ship_grid, containers):
         # Run until max iterations reached, then return failure
         if iter >= max_iter:
             print("Balance could not be achieved, beginning SIFT...")
+            steps, ship_grids = [], []
             steps = sift(ship_grid, containers)
             print_grid(ship_grid)
+            print(steps)
+            r, c = np.array(ship_grid).shape
+            ship_grids = reformat_grid_list(ship_grids, r, c)
             return steps, ship_grids, False
         
         if left_balance > right_balance:
@@ -193,6 +205,9 @@ def balance(ship_grid, containers):
         iter += 1
     
     # return updated ship grid and success
+    r, c = np.array(ship_grid).shape
+    ship_grids = reformat_grid_list(ship_grids, r, c)
+
     return steps, ship_grids, True
 
 
@@ -514,6 +529,36 @@ def calculate_balance(ship_grid):
     return left_balance, right_balance, balanced
 
 
+def flatten(l):
+    for el in l:
+        if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
+    
+
+def divide_list(l, n):
+      
+    # looping till length l
+    for i in range(0, len(l), n): 
+        yield l[i:i + n]
+
+
+def reshape_to_grids(l, r, c):
+    grids = []
+    for el in l:
+        grids.append(np.array(el).reshape(r, c).tolist())
+    
+    return grids
+
+
+def reformat_grid_list(ship_grids, r, c):
+    formatted = list(flatten(copy.deepcopy(ship_grids)))
+    formatted = list(divide_list(formatted, r * c))
+    formatted = reshape_to_grids(formatted, r, c)
+
+    return formatted
+
 if __name__=="__main__":
 
     ship_grid = create_ship_grid(8, 12)
@@ -575,11 +620,16 @@ if __name__=="__main__":
         print_grid(ship_grid)
         print()
 
-        steps = []
+        steps, ship_grids = [], None
 
         # Case 1 Unload
         if case == 1:
-            steps.append(unload([[0, 1]], ship_grid))
+            new_steps, ship_grids = unload([[0, 1]], ship_grid)
+            steps.append(new_steps)
+
+            print_grid(ship_grids[0])
+            print()
+
         
         # Case 2 Load
         if case == 2:
@@ -597,13 +647,19 @@ if __name__=="__main__":
         
         # Case 4 Load/Unload
         if case == 4:
-            steps.append(load([(Container("Nat", 6543), [1, 3])], ship_grid))
-            steps.append(unload([[6, 4]], ship_grid))
+            new_steps, ship_grids = load([(Container("Nat", 6543), [1, 3])], ship_grid)
+            steps.append(new_steps)
+
+            new_steps, ship_grids = unload([[6, 4]], ship_grid)
+            steps.append(new_steps)
         
         # Case 5 Load/Unload
         if case == 5:
-            steps.append(load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid))
-            steps.append(unload([[0, 4], [0, 3]], ship_grid))
+            new_steps, ship_grids = load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid)
+            steps.append(new_steps)
+
+            new_steps, ship_grids = unload([[0, 4], [0, 3]], ship_grid)
+            steps.append(new_steps)
 
         print_grid(ship_grid)
 
