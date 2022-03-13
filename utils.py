@@ -2,6 +2,7 @@ import copy
 from multiprocessing.sharedctypes import Value
 import re
 from shutil import move
+from tokenize import String
 import numpy as np
 import time
 
@@ -561,9 +562,20 @@ def calculate_balance(ship_grid):
     return left_balance, right_balance, balanced
 
 
-# TODO: Implement function
 def update_manifest(ship_grid):
-    return None
+    manifest_info = []
+    manifest_row: String = ''
+    for r, row in enumerate(ship_grid):
+        for c, slot in enumerate(row):
+            manifest_row = "[" + "{0:0=2d}".format(r + 1) + ',' + "{0:0=2d}".format(c + 1) + "], "
+            weight = 0 if slot.hasContainer is False else slot.container.weight
+            manifest_row += "{" + "{0:0=5d}".format(weight) + "}, "
+            name = 'NAN' if slot.hasContainer is False and slot.available is False else \
+                'UNUSED' if slot.hasContainer is False and slot.available is True else \
+                    slot.container.name
+            manifest_row += name
+            manifest_info.append(manifest_row)
+    return manifest_info
 
 
 def flatten(l):
@@ -678,9 +690,8 @@ if __name__=="__main__":
             print()
             print("Steps:")
             print(steps)
+
     else:
-        # containers = [[6, 4]]
-        # steps = unload(containers, ship_grid)
 
         case = int(input("Select a load/unload case from 1 - 5: "))
 
