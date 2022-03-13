@@ -561,6 +561,11 @@ def calculate_balance(ship_grid):
     return left_balance, right_balance, balanced
 
 
+# TODO: Implement function
+def update_manifest(ship_grid):
+    return None
+
+
 def flatten(l):
     for el in l:
         if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
