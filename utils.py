@@ -82,6 +82,8 @@ def load(containers_and_locs, ship_grid):
 
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
 
+    containers_and_locs = sorted(containers_and_locs, key=lambda x: x[1][0])
+
     for idx, (container, loc) in enumerate(containers_and_locs):
         ship_grid[unloading_zone[0]][unloading_zone[1]].container = container
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = True

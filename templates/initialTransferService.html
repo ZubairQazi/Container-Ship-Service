@@ -2,7 +2,10 @@
 <html>
 	<head>
 		<link rel="stylesheet" href='/static/style.css' />
+		<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->
 		<title>Transfer Service</title>
+		<script type="text/javascript"> var starttransferURL = "{{ url_for('starttransfer') }}"; </script>
+		<script src="{{ url_for('static', filename='grid.js') }}"></script>
 	</head>
 
 	<body>
@@ -14,14 +17,14 @@
 					{% for j,slot in enumerate(row) %}
 						{% if slot.hasContainer == True and slot.available == False %}
 							{% if slot.container.name_check == True %}
-								<div class="containerButtonWrapper" id="{{slot.container.name_adj[0]}}" onclick="TurnRed(this.id,{{i}},{{j}})">{{slot.container.name_adj[0]}}</div>
+								<div class="containerButtonWrapper" id="{{slot.container.name_adj[0]}}" onclick="UnloadContainer(this.id,{{i}},{{j}})" data-weight="{{slot.container.weight}}">{{slot.container.name_adj[0]}}</div>
 							{% else %}
-								<div class="containerButtonWrapper"id="{{slot.container.name}}" onclick="TurnRed(this.id,{{i}},{{j}})">{{slot.container.name}}</div>
+								<div class="containerButtonWrapper"id="{{slot.container.name}}" onclick="UnloadContainer(this.id,{{i}},{{j}})" data-weight="{{slot.container.weight}}">{{slot.container.name}}</div>
 							{% endif %}
 						{% elif slot.hasContainer == False and slot.available == False %}
 							<div class="unavailableSlotWrapper"></div>
 						{% else %}
-							<div class="emptySlotWrapper" id="[{{i}},{{j}}]" onclick="TurnGreen(this.id)"></div>
+							<div class="emptySlotWrapper" id="[{{i}},{{j}}]" onclick="LoadContainer(this.id)"></div>
 						{% endif %}
 					{% endfor %}
 					</div>
@@ -30,16 +33,16 @@
 			<div class="moveListContainer"></div>
 		</div>
 		<div class="boxTitle"> <h2>Comment Box</h2> </div>
-			<form class="formClass" action="http://localhost:5000/starttransfer" method="POST" enctype="multipart/form-data">
+			<!-- <form class="formClass" action="http://localhost:5000/starttransfer" method="POST" enctype="multipart/form-data"> -->
 				<div class="formContainer">
 					<div class="commentBoxWrapper">
 						<input type="text" id="commentBoxId">
 					</div>
 					<div class="submitWrapper">
-						<input type="submit" value="Next">
+						<input type="submit" value="Next" onclick="FinalizeUnloadContainers();">
 					</div>
 				</div>
-			</form>
+			<!-- </form> -->
 	</body>
-	<script src="{{ url_for('static', filename='grid.js') }}"></script>
+	<!-- <script src="{{ url_for('static', filename='grid.js') }}"></script> -->
 </html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href='/static/style.css' />
+		<title>Load Containers Form</title>
+	</head>
+
+	<body>
+        <h1> Transfer Service </h1>
+            <form class="formClass" action="http://localhost:5000/transferprocessing" method="POST" enctype="multipart/form-data" name="loadForm">
+                {% for i,element in enumerate(load_coords)  %}
+                    <ul class="form-style-1">
+                        <label>Information for Container that is going to be loaded in slot {{adjusted_load_coords[i]}}</label>
+                        <li><label>Name of Container<span class="required">*</span></label>
+                            <input type="text" name="nameform{{i}}" class="field-long" placeholder="Name" data-position="{{element}}">
+                        </li>
+                        <li>
+                            <label>Weight of Container<span class="required">*</span></label>
+                            <input type="text" name="weightform{{i}}" class="field-long" placeholder="Weight">
+                        </li>
+                    </ul>
+                {% endfor %}
+                <input type="submit" value="Submit">
+            </form>
+    </body>
+</html>
