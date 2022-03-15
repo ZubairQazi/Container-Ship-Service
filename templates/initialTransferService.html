@@ -2,9 +2,11 @@
 <html>
 	<head>
 		<link rel="stylesheet" href='/static/style.css' />
-		<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<title>Transfer Service</title>
-		<script type="text/javascript"> var starttransferURL = "{{ url_for('starttransfer') }}"; </script>
+		<!-- <script type="text/javascript"> var starttransferURL = "{{ url_for('starttransfer') }}"; </script> -->
+		<script type="text/javascript"> var jsresponseURL = "{{ url_for('js_response') }}"; </script>
+		<script type="text/javascript"> var logresponseURL = "{{ url_for('logger') }}"; </script>
 		<script src="{{ url_for('static', filename='grid.js') }}"></script>
 	</head>
 
@@ -33,16 +35,43 @@
 			<div class="moveListContainer"></div>
 		</div>
 		<div class="boxTitle"> <h2>Comment Box</h2> </div>
-			<!-- <form class="formClass" action="http://localhost:5000/starttransfer" method="POST" enctype="multipart/form-data"> -->
 				<div class="formContainer">
 					<div class="commentBoxWrapper">
-						<input type="text" id="commentBoxId">
+						<input type="text" id="commentBoxId" name="commentText">
+						<script>
+							var comment = document.getElementById("commentBoxId")
+							comment.addEventListener("keydown", function(e) {
+								if (e.keyCode === 13) {
+									alert('Comment Logged Successfully!');
+									info = comment.value;
+    								data = JSON.stringify(info)
+
+									$.ajax({
+										type:"POST",
+										contentType: "application/json",
+										url:"/logger",
+										data: data,
+										dataType: "json",
+										success: function(response) {
+											console.log(response);
+										},
+										error: function(err) {
+											console.log(err);
+										}
+									});
+								}
+							});
+						</script>
 					</div>
 					<div class="submitWrapper">
-						<input type="submit" value="Next" onclick="FinalizeUnloadContainers();">
+						<input type="submit" value="Submit" onclick="FinalizeContainers();">
 					</div>
+					<form class="formClass" action="http://localhost:5000/starttransfer" method="POST" enctype="multipart/form-data">
+						<div class="nextWrapper">
+							<input type="submit" value="Next">
+						</div>
+					</form>
 				</div>
-			<!-- </form> -->
 	</body>
 	<!-- <script src="{{ url_for('static', filename='grid.js') }}"></script> -->
 </html>

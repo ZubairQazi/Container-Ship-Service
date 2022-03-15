@@ -5,7 +5,6 @@ function UnloadContainer(cellId,positionI,positionJ){
     element = document.getElementById(cellId);
     cssObj = getComputedStyle(element,null)
     bgColor = cssObj.getPropertyValue("background-color")
-    console.log(bgColor)
     if (bgColor === "rgb(38, 100, 245)") {
         element.style.backgroundColor = "Red"
     }
@@ -29,7 +28,6 @@ function LoadContainer(cellCoordinates) {
 }
 
 function TurnPink(cellId,count,totalMoves) {
-    console.log(cellId)
     element = document.getElementById(cellId);
     element.style.backgroundColor = "Pink";
 }
@@ -39,10 +37,15 @@ function CurrentContainer(cellId){
     element.style.backgroundColor = "Red";
 }
 
+function popupFunction() {
+    var popup = document.getElementById("myPopup");
+    popup.classList.toggle("show");
+  }
+
 var unloading_containers = [];
 var loading_coordinates = [];
 
-function FinalizeUnloadContainers(){
+function FinalizeContainers(){
 
     //Finalize containers that are going to be unloaded
     var elements = document.getElementsByClassName("containerButtonWrapper")
@@ -67,36 +70,50 @@ function FinalizeUnloadContainers(){
         }
     }
     // Sending to FLASK
+    alert('Locations Submitted To System!');
     grid_data = {'unloading':unloading_containers, 'loading':loading_coordinates}
-    console.log(grid_data)
     var unloading_containers_JSON = JSON.stringify(grid_data);
 
-    // starttransferURL goes to start_transfer function in python
-    fetch(starttransferURL, {
-        method: 'POST',
-        credentials: "include",
-        body: unloading_containers_JSON,
-        cache: "no-cache",
-        redirect: "follow",
-        headers: new Headers({
-            "content-type": "application/json"
-        })
-    })
-    .then(response => {
-        // Grab redirect link and follow through with it
-        if(response.redirected){
-            window.location.href = response.url;
+
+    $.ajax({
+        type:"POST",
+        contentType: "application/json",
+        url:"/jsresponse",
+        data: unloading_containers_JSON,
+        dataType: "json",
+        success: function(response) {
+            console.log(response);
+        },
+        error: function(err) {
+            console.log(err);
         }
-    })
-    .catch(function(err) {
-        console.info(err + " url: " + url);
     });
-    // .catch(function(error) {
-    //     console.log("Fetch error: " + error);
+
+
+    // starttransferURL goes to start_transfer function in python
+    // fetch(jsresponseURL, {
+    //     method: 'POST',
+    //     credentials: "include",
+    //     body: unloading_containers_JSON,
+    //     cache: "no-cache",
+    //     redirect: "follow",
+    //     headers: new Headers({
+    //         "content-type": "application/json"
+    //     })
+    // })
+    // .then(response =>{
+    //     // Grab redirect link and follow through with it
+    //     if (response.redirected){
+    //         window.location.href = response.url;
+    //     }
+
+    // })
+    // .catch(function(err) {
+    //     console.info(err + " url: ");
     // });
 
 }
 
 
 
-var json_unload_containers = JSON.stringify(unloading_containers);
+//var json_unload_containers = JSON.stringify(unloading_containers);

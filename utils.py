@@ -107,7 +107,7 @@ def load(containers_and_locs, ship_grid):
 def unload(containers_to_unload, ship_grid):
 
     # order containers by height, descending
-    containers = sorted(containers_to_unload, key=lambda c: c[1], reverse=True)
+    containers = sorted(containers_to_unload, key=lambda r: r[0], reverse=True)
 
     ship_grids, store_goals  = [], []
 
@@ -563,6 +563,22 @@ def calculate_balance(ship_grid):
     return left_balance, right_balance, balanced
 
 
+def update_manifest(ship_grid):
+    manifest_info = []
+    manifest_row = ''
+    for r, row in enumerate(ship_grid):
+        for c, slot in enumerate(row):
+            manifest_row = "[" + "{0:0=2d}".format(r + 1) + ',' + "{0:0=2d}".format(c + 1) + "], "
+            weight = 0 if slot.hasContainer is False else slot.container.weight
+            manifest_row += "{" + "{0:0=5d}".format(weight) + "}, "
+            name = 'NAN' if slot.hasContainer is False and slot.available is False else \
+                'UNUSED' if slot.hasContainer is False and slot.available is True else \
+                    slot.container.name
+            manifest_row += name
+            manifest_info.append(manifest_row)
+    return manifest_info
+
+
 def flatten(l):
     for el in l:
         if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
@@ -601,7 +617,7 @@ def reformat_step_list(steps, store_goals):
         s_idx = str_steps.find(start)
         e_idx = str_steps.find(goal)
         step = str_steps[s_idx-1:e_idx+(len(goal)+1)]
-        str_steps = str_steps[e_idx:]
+        str_steps = str_steps[e_idx+(len(goal)+1):]
         store.append(step)
 
     step_list = []

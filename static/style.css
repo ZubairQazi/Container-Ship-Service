@@ -172,8 +172,8 @@ h2 {
 .submitWrapper {
 	width: 100px;
 	height: 50px;
-	padding-right: 150px;
-	padding-bottom: 50px;
+	padding-left: 75px;
+	padding-bottom: 100px;
 }
 .submitWrapper input[type="submit"] {
 	width: 100px;
@@ -188,6 +188,24 @@ h2 {
 	justify-content: center;
 }
 
+.nextWrapper {
+	width: 100px;
+	height: 50px;
+	padding-right: 75px;
+	padding-bottom: 100px;
+}
+.nextWrapper input[type="submit"] {
+	width: 100px;
+	height: 50px;
+	border: none;
+	cursor: pointer;
+	text-transform: uppercase;
+	border-radius: 4px;
+	background-color: #1DA1F2;
+	color: white;
+	cursor: pointer;
+	justify-content: center;
+}
 .formClass{
 	font: 1.2em Helvetica, Arial, sans-serif;
 }
