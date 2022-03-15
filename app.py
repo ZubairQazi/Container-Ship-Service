@@ -267,7 +267,8 @@ def process_transfer():
                 num_containers_to_transfer += len(container_locs_unload)
 
         ship_grid_flipped = ship_grids[0][::-1][:]
-        ship_grids = ship_grids[1:]
+        if len(ship_grids) > 1:
+            ship_grids = ship_grids[1:]
         
         ship_grid_pickle = jsonpickle.encode(ship_grids, unpicklable=False)
         ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
@@ -309,7 +310,8 @@ def transfer_steps():
         ship_grids = json_to_grid(ship_grids_json)
 
         ship_grid = ship_grids[0]
-        ship_grids = ship_grids[1:]
+        if len(ship_grids) > 1:
+            ship_grids = ship_grids[1:]
 
         ship_grid_pickle = jsonpickle.encode(ship_grids, unpicklable=False)
         ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
@@ -343,8 +345,20 @@ def transfer_steps():
 
 @app.route('/transfercomplete', methods = ['GET', 'POST'])
 def transfered():
-    file_path = session.get('filePath')
+    file_path = session.get('filePath') 
+
+    ship_grids_json = jsonpickle.decode(session.get('ship_grids'))
+    ship_grids = json_to_grid(ship_grids_json)
+
+    updated_manifest = utils.update_manifest(ship_grids[-1])
+
+    with open(file_path[:len(file_path) - 4] + "__UPDATED.txt", 'w') as f:
+        for line in updated_manifest:
+            f.writelines(line + '\n')
+        f.close()
+
     log("Transfer service completed. Updated Manifest saved to {}".format(file_path[:len(file_path) - 4] + "__UPDATED.txt"))
+
     return render_template('transfered.html')
 
 #Balance functions and html templates
@@ -374,7 +388,9 @@ def start_balance():
         log("Estimated Total Time for Service: {} minutes".format(total_time))
         session['total_time'] = total_time
         ship_grid_flipped = ship_grids[0][::-1][:]
-        ship_grids = ship_grids[1:]
+
+        if len(ship_grids) > 1:
+            ship_grids = ship_grids[1:]
 
         ship_grid_pickle = jsonpickle.encode(ship_grids, unpicklable=False)
         ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
@@ -413,7 +429,9 @@ def next_step_balance():
         ship_grids = json_to_grid(ship_grids_json)
 
         ship_grid = ship_grids[0]
-        ship_grids = ship_grids[1:]
+
+        if len(ship_grids) > 1:
+            ship_grids = ship_grids[1:]
 
         ship_grid_pickle = jsonpickle.encode(ship_grids, unpicklable=False)
         ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
@@ -445,6 +463,18 @@ def next_step_balance():
 
 @app.route('/balanced', methods = ['GET','POST'])
 def balanced():
+    file_path = session.get('filePath') 
+
+    ship_grids_json = jsonpickle.decode(session.get('ship_grids'))
+    ship_grids = json_to_grid(ship_grids_json)
+
+    updated_manifest = utils.update_manifest(ship_grids[-1])
+
+    with open(file_path[:len(file_path) - 4] + "__UPDATED.txt", 'w') as f:
+        for line in updated_manifest:
+            f.writelines(line + '\n')
+        f.close()
+    
     balance_status = session.get('success', None)
     if balance_status is True:
         file_path = session.get('filePath')
