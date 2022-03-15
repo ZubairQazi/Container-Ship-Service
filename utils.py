@@ -198,6 +198,9 @@ def balance(ship_grid, containers):
 
     previous_balance_ratio = 0
 
+    orig_ship_grid = copy.deepcopy(ship_grid)
+    orig_container = copy.deepcopy(containers)
+
     # On heavier side, cycle through each container
     while(balanced is False):
 
@@ -234,8 +237,12 @@ def balance(ship_grid, containers):
         # If there has been no update in balance
         if (abs(previous_balance_ratio - balance_ratio) < 0.000001):
             print("Balance could not be achieved, beginning SIFT...")
-            steps = sift(ship_grid, containers)
-            print_grid(ship_grid)
+            ship_grid, containers = orig_ship_grid, orig_container
+            steps, ship_grids, store_goals = [], [], []
+            steps, ship_grids = sift(ship_grid, containers, store_goals)
+            r, c = np.array(ship_grid).shape
+            ship_grids = reformat_grid_list(ship_grids, r, c)
+            steps = reformat_step_list(steps, store_goals)
             return steps, ship_grids, False
 
         # move container
