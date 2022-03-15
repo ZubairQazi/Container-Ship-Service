@@ -2,6 +2,7 @@ import copy
 from multiprocessing.sharedctypes import Value
 import re
 from shutil import move
+from tokenize import String
 import numpy as np
 import time
 
@@ -691,9 +692,8 @@ if __name__=="__main__":
             print()
             print("Steps:")
             print(steps)
+
     else:
-        # containers = [[6, 4]]
-        # steps = unload(containers, ship_grid)
 
         case = int(input("Select a load/unload case from 1 - 5: "))
 
