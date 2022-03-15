@@ -373,7 +373,7 @@ def move_to(container_loc, goal_loc, ship_grid, store_goals):
         # If there are two options of the same distance
         same_distances = [tup for tup in distances if tup[1] == distances[0][1]]
         if len(same_distances) > 1:
-            num_moves = [(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances]
+            num_moves = [(loc, abs(loc[1] - goal_loc[1]), d) for loc, d in same_distances]
             if not num_moves:
                 print("No moves possible!")
                 return [], []
@@ -381,7 +381,7 @@ def move_to(container_loc, goal_loc, ship_grid, store_goals):
             # cycle through possible moves until a new move is reached
             while (curr_container, possible_move) in visited:
                 same_distances.remove((possible_move, d))
-                num_moves = [(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances]
+                num_moves = [(loc, abs(loc[1] - goal_loc[1]), d) for loc, d in same_distances]
                 if not num_moves:
                     print("No moves possible!")
                     return [], []
@@ -526,7 +526,7 @@ def return_valid_moves(container_loc, ship_grid):
 
     # only neighbors inside the grid, (x, y) >= 0
     neighbors = [neighbor for neighbor in neighbors if neighbor[0] >= 0  and neighbor[0] <= 7 and \
-        neighbor[1] >= 0 and neighbor[1] <= 7]
+        neighbor[1] >= 0 and neighbor[1] <= 11]
 
     valid_moves = []
 
@@ -783,10 +783,13 @@ if __name__=="__main__":
         
         # Case 5 Load/Unload
         if case == 5:
-            steps, ship_grids = load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid)
+            steps, ship_grids = load([(Container("Nat", 153), [0, 7]), (Container("Rat", 2321), [0, 8])], ship_grid)
+
+            print(steps)
 
             new_steps, new_ship_grids = unload([[0, 4], [0, 3]], ship_grids[-1])
-            steps.append(new_steps)
+            for step in new_steps:
+                steps.append(step)
             ship_grids.append(new_ship_grids)
 
         r, c = np.array(ship_grids[0]).shape
