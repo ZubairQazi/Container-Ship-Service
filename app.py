@@ -72,6 +72,8 @@ def upload_file():
           file_ext = os.path.splitext(filename)[1]
           if file_ext not in app.config['UPLOAD_EXTENSIONS']:
               return "Invalid file", 400
+          if not os.path.exists('uploads'):
+            os.makedirs('uploads')
           filePath = os.path.join(app.config['UPLOAD_PATH'],filename)
           f.save(filePath)
           session['filePath'] = filePath

@@ -1,8 +1,5 @@
 import copy
-from multiprocessing.sharedctypes import Value
 import re
-from shutil import move
-from tokenize import String
 import numpy as np
 import time
 
@@ -90,11 +87,32 @@ def load(containers_and_locs, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = True
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = False
 
+        orig_ship_grid = copy.deepcopy(ship_grid)
+
         extra_steps, extra_grids = move_to(unloading_zone, loc, ship_grid, store_goals)
+
+        if not extra_steps:
+            # If no possible steps, container is being blocked
+            ship_grid = orig_ship_grid
+            containers = []
+            for r, row in enumerate(ship_grid):
+                for c, slot in enumerate(row):
+                    if slot.hasContainer is True:
+                        if [r, c] != unloading_zone:
+                            containers.append([r, c])
+            
+            sorted_containers = sorted(containers, key=lambda x:x[0], reverse=True)
+            new_loc = nearest_available(sorted_containers[0], ship_grid)
+            extra_steps, extra_grids = move_to(sorted_containers[0], new_loc, ship_grid, store_goals)
+
+            new_steps, new_grids = move_to(unloading_zone, loc, ship_grid, store_goals)
+
+            extra_steps.append(new_steps)
+            extra_grids.append(new_grids)
+
 
         steps.append(extra_steps)
         # steps[idx].insert(0, "[8, 0] to [7, 0]")
-
         ship_grids.append(extra_grids)
     
     r, c = np.array(ship_grid).shape
@@ -112,10 +130,32 @@ def unload(containers_to_unload, ship_grid):
 
     ship_grids, store_goals  = [], []
 
+    orig_ship_grid = copy.deepcopy(ship_grid)
+
     steps, unloading_zone = [], [len(ship_grid) - 1, 0]
     # move each container to unloading zone
     for container_loc in containers:
         extra_steps, extra_grids = move_to(container_loc, unloading_zone, ship_grid, store_goals)
+
+        if not extra_steps:
+            # If no possible steps, container is being blocked
+            ship_grid = orig_ship_grid
+            containers = []
+            for r, row in enumerate(ship_grid):
+                for c, slot in enumerate(row):
+                    if slot.hasContainer is True:
+                        if [r, c] != container_loc:
+                            containers.append([r, c])
+            
+            sorted_containers = sorted(containers, key=lambda x:x[0], reverse=True)
+            new_loc = nearest_available(sorted_containers[0], ship_grid)
+            extra_steps, extra_grids = move_to(sorted_containers[0], new_loc, ship_grid, store_goals)
+
+            new_steps, new_grids = move_to(container_loc, unloading_zone, ship_grid, store_goals)
+
+            extra_steps.append(new_steps)
+            extra_grids.append(new_grids)
+
         steps.append(extra_steps)
         ship_grids.append(extra_grids)
 
@@ -125,6 +165,8 @@ def unload(containers_to_unload, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].container = None
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = False
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = True
+
+        ship_grids.append(ship_grid)
 
     r, c = np.array(ship_grid).shape
     ship_grids = reformat_grid_list(ship_grids, r, c)
@@ -331,11 +373,19 @@ def move_to(container_loc, goal_loc, ship_grid, store_goals):
         # If there are two options of the same distance
         same_distances = [tup for tup in distances if tup[1] == distances[0][1]]
         if len(same_distances) > 1:
-            possible_move, _, d = min([(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances], key = lambda x: x[1])
+            num_moves = [(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances]
+            if not num_moves:
+                print("No moves possible!")
+                return [], []
+            possible_move, _, d = min(num_moves, key = lambda x: x[1])
             # cycle through possible moves until a new move is reached
             while (curr_container, possible_move) in visited:
                 same_distances.remove((possible_move, d))
-                possible_move, _, d = min([(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances], key = lambda x: x[1])
+                num_moves = [(loc, abs((len(ship_grid[0]) / 2) - loc[1]), d) for loc, d in same_distances]
+                if not num_moves:
+                    print("No moves possible!")
+                    return [], []
+                possible_move, _, d = min(num_moves, key = lambda x: x[1])
             # If there is still an available new move
             if (len(same_distances) > 0):
                 next_move = possible_move
@@ -387,7 +437,7 @@ def compute_cost(container_loc, goal_loc, ship_grid):
             if curr_container_loc[0] < len(ship_grid) - 1:
                 if ship_grid[curr_container_loc[0] + 1][curr_container_loc[1]].hasContainer:
                     print("No valid moves for current container... Moving container above")
-                    extra_steps,  _ = move_container_above(curr_container_loc, ship_grid)
+                    extra_steps,  _ = move_container_above(curr_container_loc, ship_grid, [])
                     steps.append(extra_steps)
 
         distances = []
@@ -714,16 +764,20 @@ if __name__=="__main__":
         if case == 3:
             steps, ship_grids = load([(Container("Bat", 5432), [0, 4]), (Container("Rat", 5397), [0, 5])], ship_grid)
             
-            new_steps, new_ship_grids = unload([[0, 1]], ship_grid)
+            new_steps, new_ship_grids = unload([[0, 1]], ship_grids[-1])
             steps.append(new_steps)
             ship_grids.append(new_ship_grids)
             
         
         # Case 4 Load/Unload
         if case == 4:
-            steps, ship_grids = load([(Container("Nat", 6543), [1, 3])], ship_grid)
+            steps, ship_grids = load([(Container("Nat", 6543), [1, 7])], ship_grid)
 
-            new_steps, new_ship_grids = unload([[6, 4]], ship_grid)
+            print('Completed Loading')
+            print_grid(ship_grids[-1])
+            print()
+
+            new_steps, new_ship_grids = unload([[6, 4]], ship_grids[-1])
             steps.append(new_steps)
             ship_grids.append(new_ship_grids)
         
@@ -731,10 +785,12 @@ if __name__=="__main__":
         if case == 5:
             steps, ship_grids = load([(Container("Nat", 153), [1, 1]), (Container("Rat", 2321), [0, 6])], ship_grid)
 
-            new_steps, new_ship_grids = unload([[0, 4], [0, 3]], ship_grid)
+            new_steps, new_ship_grids = unload([[0, 4], [0, 3]], ship_grids[-1])
             steps.append(new_steps)
             ship_grids.append(new_ship_grids)
 
-        print_grid(ship_grid)
+        r, c = np.array(ship_grids[0]).shape
+        ship_grids = reformat_grid_list(ship_grids, r, c)
+        print_grid(ship_grids[-1])
 
         print(steps)
