@@ -38,8 +38,8 @@
 					{% endfor %}
 					{% for step in path_list %}
 					<script>
-						window.addEventListener('load', event => {TurnPink("{{step[0:6]}}");});	
-						window.addEventListener('load', event => {CurrentContainer("{{step[10:]}}");});
+						window.addEventListener('load', event => {TurnPink("{{step[0]}}");});	
+						window.addEventListener('load', event => {CurrentContainer("{{step[1]}}");});
 					</script>
 					{% endfor %}
 				</ol>

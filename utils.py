@@ -166,8 +166,6 @@ def unload(containers_to_unload, ship_grid):
         ship_grid[unloading_zone[0]][unloading_zone[1]].hasContainer = False
         ship_grid[unloading_zone[0]][unloading_zone[1]].available = True
 
-        ship_grids.append(ship_grid)
-
     r, c = np.array(ship_grid).shape
     ship_grids = reformat_grid_list(ship_grids, r, c)
 
@@ -307,6 +305,11 @@ def sift(ship_grid, containers, store_goals):
                     del all_sift_slots[0]
                     # get next available slot
                     next_move = all_sift_slots[0]
+
+        if next_move == container:
+            # container is already in place
+            continue
+
         # if there is a container, proceed to move it
         if ship_grid[next_move[0]][next_move[1]].hasContainer is True:
             nearest_avail = nearest_available(next_move, ship_grid)

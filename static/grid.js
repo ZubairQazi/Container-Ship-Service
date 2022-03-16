@@ -28,11 +28,13 @@ function LoadContainer(cellCoordinates) {
 }
 
 function TurnPink(cellId,count,totalMoves) {
+    console.log(cellId)
     element = document.getElementById(cellId);
     element.style.backgroundColor = "Pink";
 }
 
 function CurrentContainer(cellId){
+    console.log(cellId)
     element = document.getElementById(cellId);
     element.style.backgroundColor = "Red";
 }

@@ -40,8 +40,8 @@
 					{% endfor %}
 					{% for count,step in enumerate(path_list) %}
 					<script>
-						window.addEventListener('load', event => {TurnPink("{{step[0:6]}}","{{count+1}}");});	
-						window.addEventListener('load', event => {CurrentContainer("{{step[10:]}}");});
+						window.addEventListener('load', event => {TurnPink("{{step[0]}}","{{count+1}}");});	
+						window.addEventListener('load', event => {CurrentContainer("{{step[1]}}");});
 					</script>
 					{% endfor %}
 				</ol>

@@ -282,17 +282,24 @@ def process_transfer():
 
         display_list = []
         path_list = []
+        adj_path_list = []
         if len(all_steps) > 0:
             for step in all_steps[0]:
                 if not step:
                     continue
-                numbers = re.findall(r"[^\[\],\sa-z]",step)
-                path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
-                adjusted_numbers = [chr(ord(num)+1) for num in numbers]
-                path_step = "["+path_numbers[0]+", "+path_numbers[1]+"] to ["+path_numbers[2]+", "+path_numbers[3]+"]"
-                display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
-                display_list.append(display_step)
+                
+                numbers = re.findall(r"\d+",step)
+                path_coords, display_coords = [], []
+                for r,c in zip(numbers[0::2], numbers[1::2]):
+                    path_coords.append('[' + str(7 - int(r)) + ', ' + c + ']')
+                    display_coords.append('[' + str(int(r) + 1) + ', ' + str(int(c) + 1)+ ']')
+                path_step = path_coords[0] + " to " + path_coords[1]
+                display_step = display_coords[0] + " to " + display_coords[1]
+
+                adj_path_list.append(path_step.split(" to "))
                 path_list.append(path_step)
+                display_list.append(display_step)
+
         print('allsteps',len(all_steps))
         next_move_list = all_steps[1:]
         print('next_move_list',len(next_move_list))
@@ -300,7 +307,7 @@ def process_transfer():
 
         log("Container moved from: " + str(display_list[0][0:6]) + " to " + str(display_list[-1][10:]))
 
-        return render_template('transferService.html', ship_grid=ship_grid_flipped, enumerate=enumerate, len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list, total_time=total_time)
+        return render_template('transferService.html', ship_grid=ship_grid_flipped, enumerate=enumerate, len=len,display_list=display_list,path_list=adj_path_list,next_move_list=next_move_list, total_time=total_time)
     else:
         return "Error: Invalid Session Variables"
 
@@ -319,6 +326,7 @@ def transfer_steps():
         ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
         session['ship_grids'] = ship_grid_json
 
+        utils.print_grid(ship_grid)
         ship_grid_flipped = ship_grid[::-1][:]
 
         total_time = session.get('total_time', None)
@@ -326,23 +334,38 @@ def transfer_steps():
         if move_list is not None:
             display_list = []
             path_list = []
+            adj_path_list = []
             for step in move_list[0]:
                 if not step:
                     continue
-                numbers = re.findall(r"[^\[\],\sa-z]",step)
-                path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
-                adjusted_numbers = [chr(ord(num)+1) for num in numbers]
-                path_step = "["+path_numbers[0]+", "+path_numbers[1]+"] to ["+path_numbers[2]+", "+path_numbers[3]+"]"
-                display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
+
+                numbers = re.findall(r"\d+",step)
+                path_coords, display_coords = [], []
+                for r,c in zip(numbers[0::2], numbers[1::2]):
+                    path_coords.append('[' + str(7 - int(r)) + ', ' + c + ']')
+                    display_coords.append('[' + str(int(r) + 1) + ', ' + str(int(c) + 1)+ ']')
+                path_step = path_coords[0] + " to " + path_coords[1]
+                display_step = display_coords[0] + " to " + display_coords[1]
+
+                # print(path_step, display_step)
+
+                # numbers = re.findall(r"[^\[\],\sa-z]",step)
+                # print('numbers',numbers)
+                # path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
+                # adjusted_numbers = [chr(ord(num)+1) for num in numbers]
+                # path_step = "["+path_numbers[0]+", "+path_numbers[1]+"] to ["+path_numbers[2]+", "+path_numbers[3]+"]"
+                # display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
+
+                adj_path_list.append(path_step.split(" to "))
                 display_list.append(display_step)
                 path_list.append(path_step)
-            print(move_list[0][-1][10:])
+            print(move_list[0])
             next_move_list = move_list[1:]
             session['next_move_list'] = next_move_list
 
             log("Container moved from: " + str(display_list[0][0:6]) + " to " + str(display_list[-1][10:]))
         
-            return render_template('transferService.html', ship_grid=ship_grid_flipped, enumerate=enumerate, len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list,total_time=total_time)
+            return render_template('transferService.html', ship_grid=ship_grid_flipped, enumerate=enumerate, len=len,display_list=display_list,path_list=adj_path_list,next_move_list=next_move_list,total_time=total_time)
 
 
 @app.route('/transfercomplete', methods = ['GET', 'POST'])
@@ -351,7 +374,10 @@ def transfered():
 
     ship_grids_json = jsonpickle.decode(session.get('ship_grids'))
     ship_grids = json_to_grid(ship_grids_json)
-
+    if ship_grids[-1][7][0].hasContainer:
+        ship_grids[-1][7][0].container = None
+        ship_grids[-1][7][0].hasContainer = False
+        ship_grids[-1][7][0].available = True
     updated_manifest = utils.update_manifest(ship_grids[-1])
 
     with open(file_path[:len(file_path) - 4] + "__UPDATED.txt", 'w') as f:
@@ -389,37 +415,52 @@ def start_balance():
         total_time=len(list(utils.flatten(copy.deepcopy(move_list))))
         log("Estimated Total Time for Service: {} minutes".format(total_time))
         session['total_time'] = total_time
-        ship_grid_flipped = ship_grids[0][::-1][:]
 
-        if len(ship_grids) > 1:
-            ship_grids = ship_grids[1:]
+        print(len(move_list))
 
-        ship_grid_pickle = jsonpickle.encode(ship_grids, unpicklable=False)
-        ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
-        session['ship_grids'] = ship_grid_json
-
-        if move_list is not None:
+        if len(move_list) > 0:
             display_list = []
             path_list = []
+            adj_path_list = []
             for step in move_list[0]:
                 if not step:
                     continue
-                numbers = re.findall(r"[^\[\],\sa-z]",step)
-                path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
-                adjusted_numbers = [chr(ord(num)+1) for num in numbers]
-                path_step = "["+path_numbers[0]+", "+path_numbers[1]+"] to ["+path_numbers[2]+", "+path_numbers[3]+"]"
-                display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
+
+                numbers = re.findall(r"\d+",step)
+                path_coords, display_coords = [], []
+                for r,c in zip(numbers[0::2], numbers[1::2]):
+                    path_coords.append('[' + str(7 - int(r)) + ', ' + c + ']')
+                    display_coords.append('[' + str(int(r) + 1) + ', ' + str(int(c) + 1)+ ']')
+                path_step = path_coords[0] + " to " + path_coords[1]
+                display_step = display_coords[0] + " to " + display_coords[1]
+
+                adj_path_list.append(path_step.split(" to "))
                 display_list.append(display_step)
                 path_list.append(path_step)
+            
             next_move_list = move_list[1:]
             session['next_move_list'] = next_move_list
+            ship_grid_flipped = ship_grids[0][::-1][:]
+            if len(ship_grids) > 1:
+                ship_grids = ship_grids[1:]
+            ship_grid_pickle = jsonpickle.encode(ship_grids, unpicklable=False)
+            ship_grid_json = json.dumps(ship_grid_pickle, indent=4)
+            session['ship_grids'] = ship_grid_json
 
             log("Container moved from: " + str(display_list[0][0:6]) + " to " + str(display_list[-1][10:]))
             #if next_move_list is not None:
-            return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list, total_time=total_time)
+            return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=adj_path_list,next_move_list=next_move_list, total_time=total_time)
             #else:
         else:
-            return render_template('balanced.html')
+            balance_status = session.get('success', None)
+            if balance_status is True:
+                file_path = session.get('filePath')
+                log("Balance service completed. Updated Manifest saved to {}".format(file_path[:len(file_path) - 4] + "__UPDATED.txt"))
+                return render_template('balanced.html')
+            else:
+                file_path = session.get('filePath')
+                log("SIFT service completed. Updated Manifest saved to {}".format(file_path[:len(file_path) - 4] + "__UPDATED.txt"))
+                return render_template('sifted.html')
 
 
 @app.route('/balancesteps', methods = ['GET' , 'POST'])
@@ -444,23 +485,29 @@ def next_step_balance():
         if move_list is not None:
             display_list = []
             path_list = []
+            adj_path_list = []
             for step in move_list[0]:
                 if not step:
                     continue
-                numbers = re.findall(r"[^\[\],\sa-z]",step)
-                path_numbers = [chr(ord('7')-ord(numbers[0])+ord('0')),numbers[1],chr(ord('7')-ord(numbers[2])+ord('0')),numbers[3]]
-                adjusted_numbers = [chr(ord(num)+1) for num in numbers]
-                path_step = "["+path_numbers[0]+", "+path_numbers[1]+"] to ["+path_numbers[2]+", "+path_numbers[3]+"]"
-                display_step = "["+adjusted_numbers[0]+", "+adjusted_numbers[1]+"] to ["+adjusted_numbers[2]+", "+adjusted_numbers[3]+"]"
+                numbers = re.findall(r"\d+",step)
+                path_coords, display_coords = [], []
+                for r,c in zip(numbers[0::2], numbers[1::2]):
+                    path_coords.append('[' + str(7 - int(r)) + ', ' + c + ']')
+                    display_coords.append('[' + str(int(r) + 1) + ', ' + str(int(c) + 1)+ ']')
+                path_step = path_coords[0] + " to " + path_coords[1]
+                display_step = display_coords[0] + " to " + display_coords[1]
+
+                adj_path_list.append(path_step.split(" to "))
                 display_list.append(display_step)
                 path_list.append(path_step)
+
             next_move_list = move_list[1:]
             session['next_move_list'] = next_move_list
             total_time = session.get('total_time', None)
 
             log("Container moved from: " + str(display_list[0][0:6]) + " to " + str(display_list[-1][10:]))
         if move_list is not None:
-            return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=path_list,next_move_list=next_move_list,total_time=total_time)
+            return render_template('balanceService.html',ship_grid=ship_grid_flipped, enumerate=enumerate,len=len,display_list=display_list,path_list=adj_path_list,next_move_list=next_move_list,total_time=total_time)
 
 
 @app.route('/balanced', methods = ['GET','POST'])
