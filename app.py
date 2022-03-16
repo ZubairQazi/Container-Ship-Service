@@ -233,6 +233,8 @@ def process_transfer():
             nameForm = request.form.get(name_form)
             weight_form = 'weightform' + str(i)
             weightForm = request.form.get(weight_form)
+            if int(weightForm) < 0:
+                return render_template('error.html')
             r,c = [int(val) for val in load_coords[i].strip('[]').split(',')]
             containers_and_locs_load.append((utils.Container(nameForm, int(weightForm)), [7 - r, c]))
             log("Selected Container {} with weight {} for loading.".format(nameForm, weightForm))
