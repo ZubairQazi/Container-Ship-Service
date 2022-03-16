@@ -2,10 +2,121 @@
 <html>
 	<head>
 		<link rel="stylesheet" href='/static/style.css' />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<title>Transfer Service</title>
 	</head>
 
 	<body>
-		<h2> Select type of transfer...</h2>
+		<h1> Transfer Service </h1>
+		<h3>Total Estimated Time: {{total_time}} minutes...</h3>
+		<div class="containers">
+			<div class="gridContainer">
+				{% for i,row in enumerate(ship_grid) %}
+					<div class="rowContainer">
+					{% for j,slot in enumerate(row) %}
+						{% if slot.hasContainer == True and slot.available == False %}
+							{% if slot.container.name_check == True %}
+								<div class="nonClickContainerWrapper" id="[{{i}}, {{j}}]">{{slot.container.name_adj[0]}}</div>
+							{% else %}
+								<div class="nonClickContainerWrapper"id="[{{i}}, {{j}}]">{{slot.container.name}}</div>
+							{% endif %}
+						{% elif slot.hasContainer == False and slot.available == False %}
+							<div class="nonClickUnavailableSlotWrapper"></div>
+						{% else %}
+							<div class="nonClickemptySlotWrapper" id="[{{i}}, {{j}}]"></div>
+						{% endif %}
+					{% endfor %}
+					</div>
+				{% endfor %}
+			</div>
+			<div class="moveListContainer">
+				<strong>This is the move list for the currently highlighted container.</strong>
+				<strong>Follow the highlighted path to reach the desired location.</strong>
+				<ol>
+					{% for step in display_list %}
+						<li><strong>{{step}}</strong></li>
+					{% endfor %}
+					{% for step in path_list %}
+					<script>
+						window.addEventListener('load', event => {TurnPink("{{step[0]}}");});	
+						window.addEventListener('load', event => {CurrentContainer("{{step[1]}}");});
+					</script>
+					{% endfor %}
+				</ol>
+			</div>
+		</div>
+		<div class="boxTitle"> <h2>Comment Box</h2> </div>
+			{% if len(next_move_list) == 0 %}
+					<div class="formContainer">
+						<div class="commentBoxWrapper">
+							<input type="text" id="commentBoxId" name="commentText">
+							<script>
+								var comment = document.getElementById("commentBoxId")
+								comment.addEventListener("keydown", function(e) {
+									if (e.keyCode === 13) {
+										alert('Comment Logged Successfully!');
+										info = comment.value;
+										data = JSON.stringify(info)
+
+										$.ajax({
+											type:"POST",
+											contentType: "application/json",
+											url:"/logger",
+											data: data,
+											dataType: "json",
+											success: function(response) {
+												console.log(response);
+											},
+											error: function(err) {
+												console.log(err);
+											}
+										});
+									}
+								});
+							</script>
+						</div>
+						<form class="formClass" action="http://localhost:5000/transfercomplete" method="POST" enctype="multipart/form-data">
+							<div class="nextWrapper">
+								<input type="submit" value="Next">
+							</div>
+						</form>
+					</div>
+			{% else %}
+					<div class="formContainer">
+						<div class="commentBoxWrapper">
+							<input type="text" id="commentBoxId" name="commentText">
+							<script>
+								var comment = document.getElementById("commentBoxId")
+								comment.addEventListener("keydown", function(e) {
+									if (e.keyCode === 13) {
+										alert('Comment Logged Successfully!');
+										info = comment.value;
+										data = JSON.stringify(info)
+	
+										$.ajax({
+											type:"POST",
+											contentType: "application/json",
+											url:"/logger",
+											data: data,
+											dataType: "json",
+											success: function(response) {
+												console.log(response);
+											},
+											error: function(err) {
+												console.log(err);
+											}
+										});
+									}
+								});
+							</script>
+						</div>
+						<form class="formClass" action="http://localhost:5000/transfersteps" method="POST" enctype="multipart/form-data">
+							<div class="nextWrapper">
+								<input type="submit" value="Next">
+							</div>
+						</form>
+					</div>
+			{% endif %}
 	</body>
+	<script src="{{ url_for('static', filename='grid.js') }}"></script>
 </html>

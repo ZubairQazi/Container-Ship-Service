@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href='/static/style.css' />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<title>Balancing Service</title>
+	</head>
+
+	<body>
+		<h1> Balancing Service </h1>
+		<div class="containers">
+			<div class="gridContainer">
+				{% for i,row in enumerate(ship_grid) %}
+					<div class="rowContainer">
+					{% for j,slot in enumerate(row) %}
+						{% if slot.hasContainer == True and slot.available == False %}
+							{% if slot.container.name_check == True %}
+								<div class="nonClickContainerWrapper" id="{{slot.container.name_adj[0]}}">{{slot.container.name_adj[0]}}</div>
+							{% else %}
+								<div class="nonClickContainerWrapper"id="{{slot.container.name}}">{{slot.container.name}}</div>
+							{% endif %}
+						{% elif slot.hasContainer == False and slot.available == False %}
+							<div class="nonClickUnavailableSlotWrapper"></div>
+						{% else %}
+							<div class="nonClickemptySlotWrapper" id="[{{i}}, {{j}}]"></div>
+						{% endif %}
+					{% endfor %}
+					</div>
+				{% endfor %}
+			</div>
+			<div class="moveListContainer">
+				<strong>This is the intial container ship contents and layout.</strong>
+				<strong>Please press the "Next" Button for start the balancing service.</strong>
+			</div>
+		</div>
+		<div class="boxTitle"> <h2>Comment Box</h2> </div>
+				<div class="formContainer">
+					<div class="commentBoxWrapper">
+						<input type="text" id="commentBoxId" name="commentText">
+						<script>
+							var comment = document.getElementById("commentBoxId")
+							comment.addEventListener("keydown", function(e) {
+								if (e.keyCode === 13) {
+									alert('Comment Logged Successfully!');
+									info = comment.value;
+    								data = JSON.stringify(info)
+
+									$.ajax({
+										type:"POST",
+										contentType: "application/json",
+										url:"/logger",
+										data: data,
+										dataType: "json",
+										success: function(response) {
+											console.log(response);
+										},
+										error: function(err) {
+											console.log(err);
+										}
+									});
+								}
+							});
+						</script>
+					</div>
+					<form class="formClass" action="http://localhost:5000/startbalance" method="POST" enctype="multipart/form-data">
+						<div class="submitWrapper">
+							<input type="submit" value="Next">
+						</div>
+					</form>
+				</div>
+	</body>
+	<script src="{{ url_for('static', filename='grid.js') }}"></script>
+</html>
