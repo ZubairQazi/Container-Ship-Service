@@ -20,7 +20,7 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 app.secret_key = "secretStuff"
 app.config['UPLOAD_EXTENSIONS'] = ['.txt']
-app.config['UPLOAD_PATH'] = 'uploads' 
+app.config['UPLOAD_PATH'] = 'manifests' 
 
 log_file = 'logfile.log'
 
@@ -72,8 +72,8 @@ def upload_file():
           file_ext = os.path.splitext(filename)[1]
           if file_ext not in app.config['UPLOAD_EXTENSIONS']:
               return "Invalid file", 400
-          if not os.path.exists('uploads'):
-            os.makedirs('uploads')
+          if not os.path.exists('manifests'):
+            os.makedirs('manifests')
           filePath = os.path.join(app.config['UPLOAD_PATH'],filename)
           f.save(filePath)
           session['filePath'] = filePath
