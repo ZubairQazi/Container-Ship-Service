@@ -1,4 +1,4 @@
-# Container Ship Loading & Unloading
+# Container Ship Loading & Unloading Service
 
 ## Overview
 
@@ -19,7 +19,7 @@ Welcome to our senior design project for CS179M (AI) at UCR! This Flask-based we
 
 To get started with this project, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/ZubairQazi/CS179M.git`
+1. Clone the repository: `git clone https://github.com/ZubairQazi/Container-Ship-Service.git`
 2. Navigate to the project directory: `cd CS179M`
 7. Run the application: ``flask --app app run`
 8. Access the application in your web browser at `http://localhost:5000`.
