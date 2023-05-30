@@ -24,6 +24,11 @@ To get started with this project, follow these steps:
 7. Run the application: ``flask --app app run`
 8. Access the application in your web browser at `http://localhost:5000`.
 
+## Example
+
+See example test cases and application visuals in [comprehensive testing document](https://drive.google.com/file/d/1HUVVHZwA2XZZ-xqrkY4Sg3scJHJhkdKj/view?usp=sharing).
+
+Some example [manifest files](https://drive.google.com/drive/folders/1jDAubxcZB8d9lDcQji5_OjN0k5NnNrMF?usp=sharing).
 
 ## License
 
